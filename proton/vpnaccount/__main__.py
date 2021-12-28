@@ -16,7 +16,7 @@ def show_vpn_creds(proton_username:str):
         tier=account.max_tier
         got_info=True
         print("we got user and password offline!")
-        # In that situation we have credentials to login on the VPN, but they might fail (because they were changed)
+        # In that situation we have credentials to login on the VPN, but they might fail (because they were changed or reinitialized for ex.)
         # In that case, we must try to update them from the API.
         # The current business logic definition for that scenario is here :
         # - https://gitlab.protontech.ch/ProtonVPN/linux/protonvpn-nm-lib/-/blob/develop/protonvpn_nm_lib/core/accounting/default_accounting.py
