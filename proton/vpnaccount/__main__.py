@@ -15,6 +15,14 @@ def main():
         tier=account.max_tier
         got_info=True
         print("we got user and password offline!")
+        # In that situation we have credentials to login on the VPN, but they might fail (because they were changed)
+        # In that case, we must try to update them from the API.
+        # The current business logic definition for that scenario is here :
+        # - https://gitlab.protontech.ch/ProtonVPN/linux/protonvpn-nm-lib/-/blob/develop/protonvpn_nm_lib/core/accounting/default_accounting.py
+        # here for the CLI:
+        # - https://gitlab.protontech.ch/ProtonVPN/linux/linux-cli/-/blob/develop/protonvpn_cli/cli_wrapper.py#L409
+        # here for the GUI:
+        # - https://gitlab.protontech.ch/ProtonVPN/linux/linux-app/-/blob/develop/protonvpn_gui/view_model/dashboard.py#L460
     except VPNAccountReloadVPNData:
         sso = ProtonSSO()
         # This only works if you logged in before
