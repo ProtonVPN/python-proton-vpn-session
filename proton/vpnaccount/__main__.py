@@ -1,11 +1,12 @@
 from proton.sso import ProtonSSO
 from proton.session.api import ProtonAPIAuthenticationNeeded
 from proton.vpnaccount.vpnaccount import VPNAccount, VPNAccountReloadVPNData
+import argparse
 
-def main():
+def show_vpn_creds(proton_username:str):
 
     # Create VPN Account object
-    account=VPNAccount('testas1')
+    account=VPNAccount(proton_username)
     got_info=False
 
     # Business logic.
@@ -28,9 +29,9 @@ def main():
         sso = ProtonSSO()
         # This only works if you logged in before
         # proton-sso login testas1
-        # -> Something to handle at the orchestrator level.
+        # -> Something to handle at the coordinator/orchestrator/business logic implementation level.
         try:
-            account.reload_from_session(sso.get_session('testas1'))
+            account.reload_from_session(sso.get_session(proton_username))
             vpnuser=account.vpn_username
             vpnpass=account.vpn_password
             tier=account.max_tier
@@ -46,4 +47,8 @@ def main():
 
 
 if __name__=="__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser('vpninfo', description="Tool to test VPN account and SSO")
+    parser.add_argument('username',type=str, help='proton account username')
+    args = parser.parse_args()
+    show_vpn_creds(args.username)
