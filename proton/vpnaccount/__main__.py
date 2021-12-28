@@ -15,11 +15,10 @@ def main():
         # This only works if you logged in before
         # proton-sso login testas1
         # -> Something to handle at the orchestrator level.
-        session = sso.get_session('testas1')
-        vpndict = session.api_request('/vpn')
-        account.reload_vpn_data(vpndict)
+        account.reload_from_session(sso.get_session('testas1'))
         vpnuser=account.vpn_username
         vpnpass=account.vpn_password
+        tier=account.max_tier
         print('reloaded vpn account to keyring')
     finally:
         print(f'User:{vpnuser}')

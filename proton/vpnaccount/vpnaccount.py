@@ -1,5 +1,6 @@
 #Dataclass is a python 3.7 feature
 from dataclasses import dataclass, fields
+from proton.session.api import Session
 
 @dataclass
 class VPNSettings:
@@ -37,7 +38,7 @@ class VPNAccount:
         Wrapper that provides helpers to a persistent offline access to /vpn backend route fields retrieved 
         from the API using the keyring.
         - If the keyring does not contain such info, the user will be informed with an 
-          exception and will need to reload the data.
+          exception and will need to reload the data with a Session object (see `reload_from_session`)
         - If the Info are available through the Keyring, it will be used as an off-line cache.
     """
 
@@ -48,7 +49,7 @@ class VPNAccount:
         keyring = self._keyring
         try:
             api_vpn_data=keyring[VPNAccount.KEYRING_NAME]
-            self.reload_vpn_data(api_vpn_data)
+            self._reload_vpn_data(api_vpn_data)
         except KeyError:
             pass
 
@@ -62,8 +63,8 @@ class VPNAccount:
         from proton.loader import Loader
         return Loader.get('keyring')()
 
-    def reload_vpn_data(self, api_vpn_data: dict) -> None:
-        """ Reload vpn data from a dict directly translated from the API call /vpn to the API.
+    def _reload_vpn_data(self, api_vpn_data: dict) -> None:
+        """ helper to reload vpn data from a dict directly translated from the API call /vpn to the API.
         fields names are supposed to be the same as the field in the Json answer from the API.
 
         :raises KeyError : if a field from the dataclass does not exist in the dict, check your
@@ -79,6 +80,10 @@ class VPNAccount:
             keyring[VPNAccount.KEYRING_NAME]=api_vpn_data
         except KeyError:
             pass
+
+    def reload_from_session(self, session: Session):
+        vpndict = session.api_request('/vpn')
+        self._reload_vpn_data(vpndict)
 
     @property
     def vpn_username(self) -> str:
