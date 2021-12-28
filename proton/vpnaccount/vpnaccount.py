@@ -2,7 +2,7 @@
 from dataclasses import dataclass, fields
 
 @dataclass
-class VPNInfo:
+class VPNSettings:
     ExpirationTime: int
     Name: str
     Password: str
@@ -43,7 +43,7 @@ class VPNAccount:
 
     def __init__(self):
         self._vpn_plan=None
-        self._vpn_info=None
+        self._vpn_settings=None
         # Load info from the keyring
         keyring = self._keyring
         try:
@@ -70,9 +70,9 @@ class VPNAccount:
          interface with the API.
         """
         __account_fields=[v.name for v in fields(VPNPlan)]
-        __vpn_info_fields=[v.name for v in fields(VPNInfo)]
+        __vpn_settings_fields=[v.name for v in fields(VPNSettings)]
         self._vpn_plan=VPNPlan(*[api_vpn_data[name] for name in __account_fields])
-        self._vpn_info=VPNInfo(*[api_vpn_data['VPN'][name] for name in __vpn_info_fields])
+        self._vpn_settings=VPNSettings(*[api_vpn_data['VPN'][name] for name in __vpn_settings_fields])
         # save info to the keyring
         try:
             keyring = self._keyring
@@ -86,8 +86,8 @@ class VPNAccount:
         :raises VPNAccountReloadVPNData: Keyring is empty and should be re-populated
         :return: vpn username to use for user/password authentication on the VPN Infra
         """
-        if self._vpn_info is not None:
-            return self._vpn_info.Name
+        if self._vpn_settings is not None:
+            return self._vpn_settings.Name
         else:
             raise VPNAccountReloadVPNData
 
@@ -97,15 +97,15 @@ class VPNAccount:
         :raises VPNAccountReloadVPNData: Keyring is empty and should be re-populated
         :return: vpn password to use for user/password authentication on the VPN Infra
         """
-        if self._vpn_info is not None:
-            return self._vpn_info.Password
+        if self._vpn_settings is not None:
+            return self._vpn_settings.Password
         else:
             raise VPNAccountReloadVPNData
 
     @property
     def max_tier(self) -> int:
-        if self._vpn_info is not None:
-            return self._vpn_info.MaxTier
+        if self._vpn_settings is not None:
+            return self._vpn_settings.MaxTier
         else:
             raise VPNAccountReloadVPNData
 
