@@ -21,7 +21,7 @@ def main():
         tier=account.max_tier
         print('reloaded vpn account to keyring')
     finally:
-        print(f'User:{vpnuser}')
+        print(f'User: {vpnuser}')
         print(f'Pass: {vpnpass}')
         print(f'Tier: {tier}')
 
