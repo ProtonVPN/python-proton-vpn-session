@@ -23,6 +23,7 @@ def main():
         # - https://gitlab.protontech.ch/ProtonVPN/linux/linux-cli/-/blob/develop/protonvpn_cli/cli_wrapper.py#L409
         # here for the GUI:
         # - https://gitlab.protontech.ch/ProtonVPN/linux/linux-app/-/blob/develop/protonvpn_gui/view_model/dashboard.py#L460
+        # See also https://confluence.protontech.ch/display/VPN/Reconnection+project
     except VPNAccountReloadVPNData:
         sso = ProtonSSO()
         # This only works if you logged in before
