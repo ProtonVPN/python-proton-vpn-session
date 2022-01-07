@@ -36,7 +36,7 @@ class VPNUserPass(NamedTuple):
 
 class VPNAccountReloadVPNData(Exception):
     """ VPN Account information are empty or not available and should be filled with
-        fresh user information coming from the API by calling :meth:`proton.vpnaccount.vpnaccount.VPNAccount.reload_vpn_data`
+        fresh user information coming from the API by calling :meth:`VPNAccount.reload_vpn_data`
     """
 
 class VPNAccount:

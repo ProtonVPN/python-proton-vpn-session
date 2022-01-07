@@ -1,16 +1,16 @@
 Component VPNAccount
 ====================
 
-.. autoclass:: proton.vpnaccount.VPNAccount
+.. autoclass:: protonvpn.vpnaccount.VPNAccount
    :members:
    :special-members: __init__
 
-.. autoclass:: proton.vpnaccount.VPNUserPass
+.. autoclass:: protonvpn.vpnaccount.VPNUserPass
    :members:
 
 Exceptions
 ----------
 
-.. autoclass:: proton.vpnaccount.VPNAccountReloadVPNData
+.. autoclass:: protonvpn.vpnaccount.VPNAccountReloadVPNData
    :members:
    :inherited-members:
