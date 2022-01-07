@@ -1,2 +1,2 @@
-# Python Protonvpn Credentials
+# Python Protonvpn Account
 
