@@ -36,48 +36,24 @@ class VPNUserPass(NamedTuple):
 
 class VPNAccountReloadVPNData(Exception):
     """ VPN Account information are empty or not available and should be filled with
-        fresh user information coming from the API by calling reload_vpn_data
+        fresh user information coming from the API by calling :meth:`proton.vpnaccount.vpnaccount.VPNAccount.reload_vpn_data`
     """
 
 class VPNAccount:
     """
-        Wrapper that provides helpers to a persistent offline keyring access to /vpn backend route data fields
-        retrieved from the API.
-        - If the keyring does not contain such data, the user will be informed with `VPNAccountReloadVPNData`
-          Exception and will need to reload the data (see `reload_vpndata`) with a with a dict containing the
-          following raw data structure, that can be retrieved directly from the API :
-          ```
-                            {
-                            "Code": 1000,
+        Wrapper that provides helpers to a persistent offline access to /vpn backend route data fields
+        retrieved from the API (a keyring typically).
 
-                            "VPN": {
-                                "ExpirationTime": 1,
-                                "Name": "test",
-                                "Password": "passwordtest",
-                                "GroupID": "testgroup",
-                                "Status": 1,
-                                "PlanName": "free",
-                                "PlanTitle": null,
-                                "MaxTier": 0,
-                                "MaxConnect": 2,
-                                "Groups": [
-                                "vpnfree"
-                                ],
-                            },
-                            "Services": 5,
-                            "Subscribed": 0,
-                            "Delinquent": 0,
-                            "HasPaymentMethod": 1,
-                            "Credit": 17091,
-                            "Currency": "EUR",
-                            "Warnings": []
-                            }
-            ```
-        - If the data is available through the Keyring, it will be used as an off-line cache through helper
-          functions.
+        - If the keyring does not contain such data, the user will be informed with :exc:`VPNAccountReloadVPNData`
+          Exception and will need to reload the data  with a with a :data:`dict` (see :meth:`reload_vpn_data`)
+
+        - If the data is available through the keyring, it will be used as an off-line cache.
     """
 
     def __init__(self, username:str):
+        """
+        :param user_name: username handle for the persistent account
+        """
         self._vpn_plan=None
         self._vpn_settings=None
         self._keyringname=self.__keyring_key_name(username)
@@ -122,10 +98,37 @@ class VPNAccount:
 
     def reload_vpn_data(self, api_vpn_data: dict) -> None:
         """ helper to reload vpn data from a dict directly translated from the API call /vpn to the API.
-        fields names are supposed to be the same as the field in the Json answer from the API.
-        See `VPNSettings` and `VPNPlan` dataclasses.
+        fields names are supposed to be the same as the field in the Json answer from the API, currently :
 
-        :raises KeyError : if a field from the dataclass does not exist in the dict, check your
+          .. code-block::
+
+                {
+                "Code": 1000,
+
+                "VPN": {
+                    "ExpirationTime": 1,
+                    "Name": "test",
+                    "Password": "passwordtest",
+                    "GroupID": "testgroup",
+                    "Status": 1,
+                    "PlanName": "free",
+                    "PlanTitle": null,
+                    "MaxTier": 0,
+                    "MaxConnect": 2,
+                    "Groups": [
+                    "vpnfree"
+                    ],
+                },
+                "Services": 5,
+                "Subscribed": 0,
+                "Delinquent": 0,
+                "HasPaymentMethod": 1,
+                "Credit": 17091,
+                "Currency": "EUR",
+                "Warnings": []
+                }
+
+        :raises: KeyError : if a field from the dataclass does not exist in the dict, check your
          interface with the API of the format of api_vpn_data.
         """
         __account_fields=[v.name for v in fields(VPNPlan)]
