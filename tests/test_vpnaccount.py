@@ -1,6 +1,6 @@
 import pytest
 import json
-from proton.vpnaccount.vpnaccount import VPNAccount, VPNAccountReloadVPNData
+from proton.vpnaccount.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData
 
 
 class TestVpnAccount:
@@ -38,11 +38,12 @@ class TestVpnAccount:
         account=VPNAccount('test')
         account.clear()
         with pytest.raises(VPNAccountReloadVPNData):
-            user=account.vpn_username
+            vpnaccount=account.get_username_and_password()
     
     def test_vpnsettings_with_keyring(self):
         account=VPNAccount('test')
-        account._reload_vpn_data(json.loads(TestVpnAccount.VPN_API_DATA))
-        assert(account.vpn_username=="test")
-        assert(account.vpn_password=="passwordtest")
+        account.reload_vpn_data(json.loads(TestVpnAccount.VPN_API_DATA))
+        vpnaccount=account.get_username_and_password()
+        assert(vpnaccount.username=="test")
+        assert(vpnaccount.password=="passwordtest")
         account.clear()
