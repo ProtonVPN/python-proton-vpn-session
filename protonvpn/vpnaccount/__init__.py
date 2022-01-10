@@ -1,3 +1,3 @@
-from .vpnaccount import VPNAccount, VPNAccountReloadVPNData, VPNUserPass
+from .vpnaccount import VPNAccount, VPNAccountReloadVPNData, VPNUserPass, VPNCertificateReload
 
-__all__ = ['VPNAccount','VPNAccountReloadVPNData', 'VPNUserPass']
+__all__ = ['VPNAccount','VPNAccountReloadVPNData', 'VPNCertificateReload', 'VPNUserPass']
