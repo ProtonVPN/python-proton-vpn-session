@@ -27,6 +27,7 @@ setup(
     entry_points={
         "console_scripts": [
             ['wgconf=protonvpn.wgconf:main'],
+            ['vpninfo=protonvpn.vpnaccount:main']
         ],
     }
 )

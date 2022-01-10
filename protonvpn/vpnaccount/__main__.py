@@ -68,8 +68,7 @@ def show_vpn_creds(proton_username:str):
     print(f'Local agent Cert: {certificate}')
     print(f'Wg client secret key: {wg_key}')
 
-
-if __name__=="__main__":
+def main():
     import argparse
     parser = argparse.ArgumentParser('vpninfo', description="Tool to test VPN account and SSO")
     parser.add_argument('username',type=str, help='proton account username')
@@ -79,3 +78,5 @@ if __name__=="__main__":
     except ProtonAPIAuthenticationNeeded:
         print('please logon on proton API first')
 
+if __name__=="__main__":
+    main()
