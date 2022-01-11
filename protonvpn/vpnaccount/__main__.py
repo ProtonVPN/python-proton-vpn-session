@@ -1,7 +1,7 @@
 from proton.sso import ProtonSSO
 from proton.session.api import ProtonAPIAuthenticationNeeded
 from protonvpn.vpnaccount import VPNAccount, VPNAccountReloadVPNData, VPNCertificateReload
-from protonvpn.vpnaccount.api_data import VPNSettingsFetcher, VPNCertificateFetcher
+from protonvpn.vpnaccount.api_data import VPNSettingsFetcher, VPNCertificateFetcher, VPNSessionsFetcher
 import argparse
 
 def show_vpn_creds(proton_username:str):
@@ -11,11 +11,14 @@ def show_vpn_creds(proton_username:str):
     got_info=False
     sso = ProtonSSO()
 
+
     # Business logic -> Certificate
     try:
         cert=account.get_client_certificate()
         certificate=cert.Certificate
         wg_key = account.get_client_private_wg_key()
+        client_key = account._vpn_certificate.ClientKey
+        print(client_key)
         print("we got the certificate and wg private keys offline!")
     except VPNCertificateReload:
         try:
@@ -68,15 +71,26 @@ def show_vpn_creds(proton_username:str):
     print(f'Local agent Cert: {certificate}')
     print(f'Wg client secret key: {wg_key}')
 
+def show_sessions(username):
+    sso = ProtonSSO()
+    f = VPNSessionsFetcher(session=sso.get_session(username))
+    sessions = f.fetch()
+    for s in sessions.Sessions:
+        print(s)
+
 def main():
     import argparse
     parser = argparse.ArgumentParser('vpninfo', description="Tool to test VPN account and SSO")
     parser.add_argument('username',type=str, help='proton account username')
+    parser.add_argument('--sessions','-s',action='store_true', help='Show sessions info for the user')
     args = parser.parse_args()
     try:
         show_vpn_creds(args.username)
     except ProtonAPIAuthenticationNeeded:
         print('please logon on proton API first')
+
+    if args.sessions:
+        show_sessions(args.username)
 
 if __name__=="__main__":
     main()

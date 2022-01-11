@@ -35,8 +35,11 @@ class VPNInfo(Serializable):
     PlanName: str
     PlanTitle: str
     MaxTier: int
+    """ Maximum tier value that this account can vpn connect to """
     MaxConnect: int
+    """ Maximum number of simultaneaous session on the infrastructure"""
     Groups: list
+    """ List of groups that this account belongs to """
     NeedConnectionAllocation: bool
 
 @dataclass
@@ -46,6 +49,7 @@ class VPNSettings(Serializable):
     Services: int
     Subscribed: int
     Delinquent: int
+    """ Encode the deliquent status of the account """
     HasPaymentMethod: int
     Credit: int
     Currency: str
@@ -62,7 +66,9 @@ class VPNCertificate(Serializable):
     SerialNumber: str
     ClientKeyFingerprint: str
     ClientKey: str
+    """ Client public key used to ask for this certificate in PEM format. """
     Certificate: str
+    """ Certificate value in PEM format. """
     ExpirationTime: int
     RefreshTime: int
     Mode: str
@@ -73,10 +79,35 @@ class VPNCertificate(Serializable):
     """To be added locally by the user. The API route is not providing it"""
 
 
+    @staticmethod
     def _deserialize(dict_data:dict) -> 'VPNCertificate' :
         __fields=[v.name for v in fields(VPNCertificate)]
         return VPNCertificate(**{name:dict_data[name] for name in __fields})
 
+
+@dataclass
+class VPNSession(Serializable):
+    SessionID: str
+    ExitIP: str
+    Protocol: str
+
+    @staticmethod
+    def _deserialize(dict_data:dict) -> 'VPNSession' :
+        __fields=[v.name for v in fields(VPNSession)]
+        return VPNSession(**{name:dict_data[name] for name in __fields})
+
+@dataclass
+class VPNSessions(Serializable):
+    """ The list of active VPN session of an account on the infra """
+    Sessions: list[VPNSession]
+
+    def __len__(self):
+        return len(self.Sessions)
+
+    @staticmethod
+    def _deserialize(dict_data:dict) -> 'VPNSessions' :
+        session_list= [ VPNSession.from_dict(value) for value in dict_data['Sessions'] ]
+        return VPNSessions(Sessions=session_list)
 
 class VPNSettingsFetcher:
     """ Helper class to retrieve a :class:`VPNSettings` object from the API. If
@@ -130,3 +161,25 @@ class VPNCertificateFetcher:
         if self._raw_data is None:
             self._fetch_raw_data()
         return VPNCertificate.from_dict(self._raw_data)
+
+class VPNSessionsFetcher:
+    """ Helper class to retrieve a :class:`VPNSessions` object from the API. If
+        can be initialized directly with the raw data coming from the API, or
+        provided with a Proton session object.
+    """
+    ROUTE='/vpn/sessions'
+
+    def __init__(self, _raw_data: dict=None, session=None ):
+        self._session=session
+        self._raw_data=_raw_data
+
+    def _fetch_raw_data(self) -> None:
+        self._raw_data = self._session.api_request(VPNSessionsFetcher.ROUTE)
+
+    def fetch(self) -> 'VPNSessions':
+        """ Return a :class:`VPNSessions` from a local cache or fetch it
+            from the API if not available.
+        """
+        if self._raw_data is None:
+            self._fetch_raw_data()
+        return VPNSessions.from_dict(self._raw_data)

@@ -3,6 +3,7 @@ import json
 from protonvpn.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData
 from protonvpn.vpnaccount.api_data import VPNSettings, VPNSettingsFetcher
 from protonvpn.vpnaccount.api_data import VPNCertificate, VPNCertificateFetcher
+from protonvpn.vpnaccount.api_data import VPNSessions
 
 
 class TestVpnAccount:
@@ -67,12 +68,27 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\\n\
   "wireguard_privatekey": "uOKx3prumFrghVKwhHzK1pbTix35a+jEQPdGEv3Z23A="
 }
 """
+    VPN_SESSIONS_FROM_API_DATA="""
+{
+    "Sessions": [
+    {
+    "SessionID": "9A35C20A09AC0833157B320C408CD679",
+    "ExitIP": "1.2.3.4",
+    "Protocol": "openvpn"
+    },
+    {
+    "SessionID": "9A35C20A09AC0833157B320C408CD67A",
+    "ExitIP": "5.6.7.8",
+    "Protocol": "openvpn"
+    }
+    ]
+}
+"""
 
     def test_vpnaccount_data_unserialize(self):
         vpnaccount = VPNSettings.from_json(TestVpnAccount.VPN_API_DATA)
         assert(vpnaccount.VPN.Name=="test")
         assert(vpnaccount.VPN.Password=="passwordtest")
-
     
     def test_vpnaccount_data_serialize(self):
         vpnaccount = VPNSettings.from_json(TestVpnAccount.VPN_API_DATA)
@@ -129,3 +145,9 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\n\
     def test_cert_serialize(self):
         cert=VPNCertificate.from_json(TestVpnAccount.VPN_CLIENT_CERT_DATA)
         json.loads(cert.to_json())
+
+    def test_sessions_unserialize(self):
+        sessions=VPNSessions.from_json(TestVpnAccount.VPN_SESSIONS_FROM_API_DATA)
+        assert(len(sessions.Sessions)==2)
+        assert(sessions.Sessions[0].ExitIP=='1.2.3.4')
+        assert(sessions.Sessions[1].ExitIP=='5.6.7.8')

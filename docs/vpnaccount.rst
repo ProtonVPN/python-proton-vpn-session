@@ -48,3 +48,7 @@ Proton API data structures
 .. autoclass:: protonvpn.vpnaccount.api_data.VPNCertificate
    :members:
    :undoc-members:
+
+.. autoclass:: protonvpn.vpnaccount.api_data.VPNSession
+   :members:
+   :undoc-members:

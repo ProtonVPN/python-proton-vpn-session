@@ -3,8 +3,9 @@ import base64
 from dataclasses import dataclass, fields
 from proton.session.api import Session
 from typing import NamedTuple, Union
-from .api_data import VPNSettings, VPNCertificate
+from .api_data import VPNSettings, VPNCertificate, VPNSession
 from datetime import datetime
+from typing import Sequence
 
 class VPNUserPass(NamedTuple):
     username: str
@@ -185,10 +186,37 @@ class VPNAccount:
     def max_tier(self) -> int:
         """
         :raises VPNAccountReloadVPNData:
-        :return: int the Maxtier Value of the acccount.
+        :return: int `Maxtier` value of the acccount from :class:`api_data.VPNInfo`
         """
         if self._vpn_settings is not None:
             return self._vpn_settings.VPN.MaxTier
         else:
             raise VPNAccountReloadVPNData
 
+    @property
+    def max_connections(self) -> int:
+        """
+        :raises VPNAccountReloadVPNData:
+        :return: int the `MaxConnect` value of the acccount from :class:`api_data.VPNInfo`
+        """
+        if self._vpn_settings is not None:
+            return self._vpn_settings.VPN.MaxConnect
+        else:
+            raise VPNAccountReloadVPNData
+
+    @property
+    def delinquent(self) -> bool:
+        """
+        :raises VPNAccountReloadVPNData:
+        :return: bool if the account is deliquent, based the value from :class:`api_data.VPNSettings`
+        """
+        if self._vpn_settings is not None:
+            return True if self._vpn_settings.Delinquent > 2 else False
+        else:
+            raise VPNAccountReloadVPNData
+
+    def get_vpn_sessions(self) -> Sequence['VPNSession']:
+        """
+        :return: the list of active VPN session of the user on the infra
+        """
+        raise NotImplementedError
