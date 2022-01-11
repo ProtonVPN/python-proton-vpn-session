@@ -68,7 +68,7 @@ class VPNCertificate(Serializable):
     ClientKey: str
     """ Client public key used to ask for this certificate in PEM format. """
     Certificate: str
-    """ Certificate value in PEM format. Contains the features requested at fetch time""
+    """ Certificate value in PEM format. Contains the features requested at fetch time"""
     ExpirationTime: int
     RefreshTime: int
     Mode: str
