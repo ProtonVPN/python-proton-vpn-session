@@ -1,12 +1,24 @@
 from proton.sso import ProtonSSO
-from protonvpn.vpnaccount import VPNAccount
+from proton.session.exceptions import ProtonAPIAuthenticationNeeded
+from protonvpn.vpnaccount import VPNAccount, VPNCertificateReload
 from protonvpn.servers.list import CachedServerList
+from protonvpn.vpnaccount.api_data import VPNCertCredentialsFetcher
 
 def get_wg_key():
     sso = ProtonSSO()
     default_account_name=sso.sessions[0]
     account=VPNAccount(default_account_name)
-    return account.get_client_private_wg_key()
+    try:
+        wg_key=account.get_client_private_wg_key()
+    except VPNCertificateReload:
+        try:
+            f = VPNCertCredentialsFetcher(session=sso.get_default_session())
+            account.reload_vpn_cert_credentials(f.fetch())
+            wg_key=account.get_client_private_wg_key()
+        except ProtonAPIAuthenticationNeeded:
+                raise
+    return wg_key
+
 
 def main():
     import argparse
@@ -15,7 +27,12 @@ def main():
     parser.add_argument('logical',type=str, help='logical to generate wg config for (DE#13, FR#33)')
     args = parser.parse_args()
     
-    wg_client_secret_key=get_wg_key()
+    try:
+        wg_client_secret_key=get_wg_key()
+    except ProtonAPIAuthenticationNeeded:
+        print("please login first")
+        return
+
     sl=CachedServerList()
     try:
         server=list(filter(lambda server: server.name == args.logical, sl))[0]
