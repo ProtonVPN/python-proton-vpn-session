@@ -6,10 +6,9 @@ import argparse
 
 def get_cert_creds(account, session):
     try:
-
         certificate=account.get_client_api_pem_certificate()
-        wg_key = account.get_client_private_wg_key()
-        openvpn_key = account.get_client_private_openvpn_key()
+        wg_key=account.get_client_private_wg_key()
+        openvpn_key=account.get_client_private_openvpn_key()
         print(f'wireguard key: {wg_key}')
         print(f'openvpn private key: {openvpn_key}')
         print(f'API certificate: {certificate}')
@@ -18,9 +17,9 @@ def get_cert_creds(account, session):
         try:
             f = VPNCertCredentialsFetcher(session=session)
             account.reload_vpn_cert_credentials(f.fetch())
-            cert=account.get_client_api_pem_certificate()
-            wg_key = account.get_client_private_wg_key()
-            openvpn_key = account.get_client_private_openvpn_key()
+            certificate=account.get_client_api_pem_certificate()
+            wg_key=account.get_client_private_wg_key()
+            openvpn_key=account.get_client_private_openvpn_key()
             print('reloaded vpn certificate info to keyring')
         except ProtonAPIAuthenticationNeeded:
             raise
