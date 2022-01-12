@@ -29,7 +29,7 @@ Proton API data fetchers
    :special-members: __init__
    :members:
 
-.. autoclass:: protonvpn.vpnaccount.api_data.VPNCertificateFetcher
+.. autoclass:: protonvpn.vpnaccount.api_data.VPNCertCredentialsFetcher
    :special-members: __init__
    :members:
 
@@ -50,5 +50,13 @@ Proton API data structures
    :undoc-members:
 
 .. autoclass:: protonvpn.vpnaccount.api_data.VPNSession
+   :members:
+   :undoc-members:
+
+.. autoclass:: protonvpn.vpnaccount.api_data.VPNCertCredentials
+   :members:
+   :undoc-members:
+
+.. autoclass:: protonvpn.vpnaccount.api_data.VPNSecrets
    :members:
    :undoc-members:

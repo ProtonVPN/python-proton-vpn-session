@@ -62,7 +62,7 @@ class VPNSettings(Serializable):
 
 @dataclass
 class VPNCertificate(Serializable):
-    """ Same object structure coming from the API, except for `wireguard_privatekey` field"""
+    """ Same object structure coming from the API """
     SerialNumber: str
     ClientKeyFingerprint: str
     ClientKey: str
@@ -75,15 +75,29 @@ class VPNCertificate(Serializable):
     DeviceName: str
     ServerPublicKeyMode: str
     ServerPublicKey: str
-    wireguard_privatekey: str 
-    """To be added locally by the user. The API route is not providing it"""
-
 
     @staticmethod
     def _deserialize(dict_data:dict) -> 'VPNCertificate' :
         __fields=[v.name for v in fields(VPNCertificate)]
         return VPNCertificate(**{name:dict_data[name] for name in __fields})
 
+@dataclass
+class VPNSecrets(Serializable):
+    """ Asymmetric crypto secrets generated locally by the client to :
+
+        - connect to the VPN service
+        - ask for a certificate to the API with the corresponding public key.
+
+    """
+    wireguard_privatekey: str
+    """Wireguard private key encoded in base64. To be added locally by the user. The API route is not providing it"""
+    openvpn_privatekey:str
+    """OpenVPN private key in PEM format. To be added locally by the user. The API is not providing it"""
+
+    @staticmethod
+    def _deserialize(dict_data:dict) -> 'VPNSecrets' :
+        __fields=[v.name for v in fields(VPNSecrets)]
+        return VPNSecrets(**{name:dict_data[name] for name in __fields})
 
 @dataclass
 class VPNSession(Serializable):
@@ -131,19 +145,36 @@ class VPNSettingsFetcher:
             self._fetch_raw_data()
         return VPNSettings.from_dict(self._raw_data)
 
-class VPNCertificateFetcher:
-    """ Helper class to retrieve a :class:`VPNCertificate` object from the API. Same
+
+class VPNCertCredentials(NamedTuple):
+    """
+        A Tuple object containing API certificate and user secrets
+    """
+    api_certificate: VPNCertificate
+    secrets: VPNSecrets
+
+    @staticmethod
+    def from_dict(cert_raw_data:dict, secrets_raw_data:dict) -> 'VPNCertCredentials' :
+        """ Helper function ton build a VPNCertCredential object from raw data
+            :return: a :class:`VPNCertCredentials` object
+        """
+        return VPNCertCredentials(VPNCertificate.from_dict(cert_raw_data),VPNSecrets.from_dict(secrets_raw_data))
+
+
+class VPNCertCredentialsFetcher:
+    """ Helper class to retrieve a :class:`VPNCertCredentials` object from the API. Same
         use as :class:`VPNSettingsFetcher`. This class also generates a private/public key pair
-        locally at initialization time that will be available in the :class:`VPNCertificate` dataclass.
+        locally at initialization time that will be available in the :class:`VPNCertCredentials`.
     """
     ROUTE='/vpn/v1/certificate'
 
     def __init__(self, _raw_data: dict =None, cert_duration: int = 1440, features=None, session=None):
+        # This will generate a new set key!
         self._keys=KeyHandler()
         self._cert_duration = str(cert_duration) + " min"
         self._session = session
         self._features = features
-        self._raw_data=_raw_data
+        self._raw_api_cert_data=_raw_data
     
     def _fetch_raw_data(self) -> None:
         json_req = {"ClientPublicKey": self._keys.ed25519_pk_pem,
@@ -151,16 +182,19 @@ class VPNCertificateFetcher:
                     }
         if self._features:
             json_req["Features"] = self._features
-        self._raw_data=self._session.api_request(VPNCertificateFetcher.ROUTE, jsondata=json_req)
-        self._raw_data["wireguard_privatekey"] = self._keys.x25519_sk_str
+        self._raw_api_cert_data=self._session.api_request(VPNCertCredentialsFetcher.ROUTE, jsondata=json_req)
 
-    def fetch(self) -> 'VPNCertificate':
+    def fetch(self) -> 'VPNCertCredentials':
         """ Return a :class:`VPNCertificate` from a local cache or fetch it
             from the API if not available.
         """
-        if self._raw_data is None:
+        if self._raw_api_cert_data is None:
             self._fetch_raw_data()
-        return VPNCertificate.from_dict(self._raw_data)
+        return VPNCertCredentials(
+                                  VPNCertificate.from_dict(self._raw_api_cert_data),
+                                  VPNSecrets(wireguard_privatekey=self._keys.x25519_sk_str,
+                                  openvpn_privatekey=self._keys.ed25519_sk_pem)
+                                 )
 
 class VPNSessionsFetcher:
     """ Helper class to retrieve a :class:`VPNSessions` object from the API. If

@@ -2,8 +2,9 @@ import pytest
 import json
 from protonvpn.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData
 from protonvpn.vpnaccount.api_data import VPNSettings, VPNSettingsFetcher
-from protonvpn.vpnaccount.api_data import VPNCertificate, VPNCertificateFetcher
+from protonvpn.vpnaccount.api_data import VPNCertificate, VPNCertCredentials, VPNCertCredentialsFetcher
 from protonvpn.vpnaccount.api_data import VPNSessions
+from protonvpn.vpnaccount.api_data import VPNSecrets
 
 
 class TestVpnAccount:
@@ -39,33 +40,32 @@ class TestVpnAccount:
     VPN_CLIENT_CERT_DATA="""
 {
   "Code": 1000,
-  "SerialNumber": "139949609",
-  "ClientKeyFingerprint": "L3BJUTjBiridwSXvu4vDSyxTK9t5pfFgSNX2L+4qlm6vYjffjt6WJuB/4g//wx5GtI9a/e4qQuv4YBiLn8Qzkw==",
+  "SerialNumber": "143175174",
+  "ClientKeyFingerprint": "Aj3O9pYE0ABRwIEG5LOcxVmMTqM2JxGOOnPZZkc8/OzM47zNoBBx0NIgiLLFwCHT5Qq7A9+MaZB5TGSuW1Focg==",
   "ClientKey": "-----BEGIN PUBLIC KEY-----\\n\
-MCowBQYDK2VwAyEAyvymacg4R/6yD9OGx+88SXKPEuZNVDJyrNTUWMvrNZM=\\n\
+MCowBQYDK2VwAyEAqlMgclyVELA2fcTtGQe3gI4vnRVBtnMuDkzju5Sfr74=\\n\
 -----END PUBLIC KEY-----",
   "Certificate": "-----BEGIN CERTIFICATE-----\\n\
-MIIB7zCCAaGgAwIBAgIECFd2KTAFBgMrZXAwMTEvMC0GA1UEAwwmUHJvdG9uVlBO\\n\
-IENsaWVudCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMjIwMTA5MDkzMDUzWhcN\\n\
-MjIwMTEwMDkzMDU0WjAUMRIwEAYDVQQDDAkxMzk5NDk2MDkwKjAFBgMrZXADIQDK\\n\
-/KZpyDhH/rIP04bH7zxJco8S5k1UMnKs1NRYy+s1k6OB9zCB9DAdBgNVHQ4EFgQU\\n\
-BjRe1mj0cfiLp46wH1GB6whc7PMwEwYMKwYBBAGDu2kBAAAABAMCAQAwEwYMKwYB\\n\
+MIIB7zCCAaGgAwIBAgIECIiuBjAFBgMrZXAwMTEvMC0GA1UEAwwmUHJvdG9uVlBO\\n\
+IENsaWVudCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMjIwMTEyMDcxNzExWhcN\\n\
+MjIwMTEzMDcxNzEyWjAUMRIwEAYDVQQDDAkxNDMxNzUxNzQwKjAFBgMrZXADIQCq\\n\
+UyByXJUQsDZ9xO0ZB7eAji+dFUG2cy4OTOO7lJ+vvqOB9zCB9DAdBgNVHQ4EFgQU\\n\
+xdRQtpXWDLqtyI4p9Pi7rlrTyuowEwYMKwYBBAGDu2kBAAAABAMCAQAwEwYMKwYB\\n\
 BAGDu2kBAAABBAMCAQIwGwYMKwYBBAGDu2kBAAACBAswCQQHdnBucGx1czAOBgNV\\n\
 HQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIwADATBgNVHSUEDDAKBggrBgEFBQcDAjBZ\\n\
 BgNVHSMEUjBQgBSz4cwQlqL4IqXL3M9EBkYs65LOBaE1pDMwMTEvMC0GA1UEAwwm\\n\
 UHJvdG9uVlBOIENsaWVudCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHmCAQEwBQYDK2Vw\\n\
-A0EAba35zlQCRgXz+JNpp31enLzIQfkfX0WEsnPL8Rz1l0A9OZXNT/QrN7GnojWY\\n\
-LwbDS5HS/a3Ps3z5gsUVehq+DA==\\n\
+A0EAkt/ZJlKcrc+FpkV4fZA7VmaGNkpFWhwRNttZBFcaLYw82LxOZKQbox2tewrt\\n\
+Bvq8ArmKTRnE5P2+mBECko0LBg==\\n\
 -----END CERTIFICATE-----\\n",
-  "ExpirationTime": 1641807054,
-  "RefreshTime": 1641785454,
+  "ExpirationTime": 1642058232,
+  "RefreshTime": 1642036632,
   "Mode": "session",
   "DeviceName": "",
   "ServerPublicKeyMode": "EC",
   "ServerPublicKey": "-----BEGIN PUBLIC KEY-----\\n\
 MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\\n\
------END PUBLIC KEY-----\\n",
-  "wireguard_privatekey": "uOKx3prumFrghVKwhHzK1pbTix35a+jEQPdGEv3Z23A="
+-----END PUBLIC KEY-----\\n"
 }
 """
     VPN_SESSIONS_FROM_API_DATA="""
@@ -84,7 +84,13 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\\n\
     ]
 }
 """
-
+    VPN_CLIENT_SECRET_DATA="""{
+"wireguard_privatekey": "0EU72yx+FbzuKW1gSOCaSM+zcaA+AcVjv6d31nxtDH4=",
+"openvpn_privatekey": "-----BEGIN PRIVATE KEY-----\\n\
+MC4CAQAwBQYDK2VwBCIEIMP3LkF1P16bARSzAaJEcTCfYbSUqDYSlBQcF16tHn5Q\\n\
+-----END PRIVATE KEY-----\\n"
+}
+"""
     def test_vpnaccount_data_unserialize(self):
         vpnaccount = VPNSettings.from_json(TestVpnAccount.VPN_API_DATA)
         assert(vpnaccount.VPN.Name=="test")
@@ -94,7 +100,7 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\\n\
         vpnaccount = VPNSettings.from_json(TestVpnAccount.VPN_API_DATA)
         json.loads(vpnaccount.to_json())
 
-    def test_fetcher(self):
+    def test_vpnsettings_fetcher(self):
         vpnaccount=VPNSettingsFetcher(json.loads(TestVpnAccount.VPN_API_DATA)).fetch()
         assert(vpnaccount.VPN.Name=="test")
         assert(vpnaccount.VPN.Password=="passwordtest")
@@ -115,26 +121,28 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\\n\
 
     def test_cert_unserialize(self):
         cert=VPNCertificate.from_json(TestVpnAccount.VPN_CLIENT_CERT_DATA)
-        assert(cert.SerialNumber=="139949609")
-        assert(cert.ClientKeyFingerprint=="L3BJUTjBiridwSXvu4vDSyxTK9t5pfFgSNX2L+4qlm6vYjffjt6WJuB/4g//wx5GtI9a/e4qQuv4YBiLn8Qzkw==")
+        assert(cert.SerialNumber=="143175174")
+        assert(cert.ClientKeyFingerprint=="Aj3O9pYE0ABRwIEG5LOcxVmMTqM2JxGOOnPZZkc8/OzM47zNoBBx0NIgiLLFwCHT5Qq7A9+MaZB5TGSuW1Focg==")
         assert(cert.ClientKey=="-----BEGIN PUBLIC KEY-----\n\
-MCowBQYDK2VwAyEAyvymacg4R/6yD9OGx+88SXKPEuZNVDJyrNTUWMvrNZM=\n\
------END PUBLIC KEY-----")
+MCowBQYDK2VwAyEAqlMgclyVELA2fcTtGQe3gI4vnRVBtnMuDkzju5Sfr74=\n\
+-----END PUBLIC KEY-----"
+        )
         assert(cert.Certificate=="-----BEGIN CERTIFICATE-----\n\
-MIIB7zCCAaGgAwIBAgIECFd2KTAFBgMrZXAwMTEvMC0GA1UEAwwmUHJvdG9uVlBO\n\
-IENsaWVudCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMjIwMTA5MDkzMDUzWhcN\n\
-MjIwMTEwMDkzMDU0WjAUMRIwEAYDVQQDDAkxMzk5NDk2MDkwKjAFBgMrZXADIQDK\n\
-/KZpyDhH/rIP04bH7zxJco8S5k1UMnKs1NRYy+s1k6OB9zCB9DAdBgNVHQ4EFgQU\n\
-BjRe1mj0cfiLp46wH1GB6whc7PMwEwYMKwYBBAGDu2kBAAAABAMCAQAwEwYMKwYB\n\
+MIIB7zCCAaGgAwIBAgIECIiuBjAFBgMrZXAwMTEvMC0GA1UEAwwmUHJvdG9uVlBO\n\
+IENsaWVudCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMjIwMTEyMDcxNzExWhcN\n\
+MjIwMTEzMDcxNzEyWjAUMRIwEAYDVQQDDAkxNDMxNzUxNzQwKjAFBgMrZXADIQCq\n\
+UyByXJUQsDZ9xO0ZB7eAji+dFUG2cy4OTOO7lJ+vvqOB9zCB9DAdBgNVHQ4EFgQU\n\
+xdRQtpXWDLqtyI4p9Pi7rlrTyuowEwYMKwYBBAGDu2kBAAAABAMCAQAwEwYMKwYB\n\
 BAGDu2kBAAABBAMCAQIwGwYMKwYBBAGDu2kBAAACBAswCQQHdnBucGx1czAOBgNV\n\
 HQ8BAf8EBAMCB4AwDAYDVR0TAQH/BAIwADATBgNVHSUEDDAKBggrBgEFBQcDAjBZ\n\
 BgNVHSMEUjBQgBSz4cwQlqL4IqXL3M9EBkYs65LOBaE1pDMwMTEvMC0GA1UEAwwm\n\
 UHJvdG9uVlBOIENsaWVudCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHmCAQEwBQYDK2Vw\n\
-A0EAba35zlQCRgXz+JNpp31enLzIQfkfX0WEsnPL8Rz1l0A9OZXNT/QrN7GnojWY\n\
-LwbDS5HS/a3Ps3z5gsUVehq+DA==\n\
------END CERTIFICATE-----\n")
-        assert(cert.ExpirationTime== 1641807054)
-        assert(cert.RefreshTime==1641785454)
+A0EAkt/ZJlKcrc+FpkV4fZA7VmaGNkpFWhwRNttZBFcaLYw82LxOZKQbox2tewrt\n\
+Bvq8ArmKTRnE5P2+mBECko0LBg==\n\
+-----END CERTIFICATE-----\n"
+        )
+        assert(cert.ExpirationTime==1642058232)
+        assert(cert.RefreshTime==1642036632)
         assert(cert.Mode=="session")
         assert(cert.DeviceName=="")
         assert(cert.ServerPublicKeyMode=="EC")
@@ -145,6 +153,22 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\n\
     def test_cert_serialize(self):
         cert=VPNCertificate.from_json(TestVpnAccount.VPN_CLIENT_CERT_DATA)
         json.loads(cert.to_json())
+
+    def test_secrets_unserialize(self):
+        secrets=VPNSecrets.from_json(TestVpnAccount.VPN_CLIENT_SECRET_DATA)
+        assert(secrets.wireguard_privatekey=="0EU72yx+FbzuKW1gSOCaSM+zcaA+AcVjv6d31nxtDH4=")
+        assert(secrets.openvpn_privatekey=="-----BEGIN PRIVATE KEY-----\n\
+MC4CAQAwBQYDK2VwBCIEIMP3LkF1P16bARSzAaJEcTCfYbSUqDYSlBQcF16tHn5Q\n\
+-----END PRIVATE KEY-----\n")
+
+    def test_secrets_serialize(self):
+        secrets=VPNSecrets.from_json(TestVpnAccount.VPN_CLIENT_SECRET_DATA)
+        json.loads(secrets.to_json())
+
+    def test_cert_credentials_builder(self):
+        cert=json.loads(TestVpnAccount.VPN_CLIENT_CERT_DATA)
+        secrets=json.loads(TestVpnAccount.VPN_CLIENT_SECRET_DATA)
+        cert_cred=VPNCertCredentials.from_dict(cert, secrets)
 
     def test_sessions_unserialize(self):
         sessions=VPNSessions.from_json(TestVpnAccount.VPN_SESSIONS_FROM_API_DATA)
