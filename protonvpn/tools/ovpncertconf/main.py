@@ -62,7 +62,7 @@ def main():
         server=list(filter(lambda server: server.name == args.logical, sl))[0]
         ip = server.get_random_physical_server().entry_ip
     except:
-        print('could not find server, maybe try another one ?')
+        print('could not find server, maybe try another one or reload the server list ?')
         return
 
     vpnconfig = VPNConfiguration.factory(ProtocolEnum.UDP, Server(ip,[80,443,4569,1194,5060]), account)
