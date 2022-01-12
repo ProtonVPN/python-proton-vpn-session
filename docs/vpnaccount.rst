@@ -1,14 +1,23 @@
-Component VPNAccount
-====================
+VPNAccount
+----------
 
 .. autoclass:: protonvpn.vpnaccount.VPNAccount
    :members:
    :special-members: __init__
 
+Credentials
+-----------
+
 .. autoclass:: protonvpn.vpnaccount.VPNUserPass
    :members:
 
+.. autoclass:: protonvpn.vpnaccount.api_data.VPNCertCredentials
+   :members:
+   :undoc-members:
 
+.. autoclass:: protonvpn.vpnaccount.api_data.VPNSecrets
+   :members:
+   :undoc-members:
 
 
 Exceptions
@@ -53,10 +62,4 @@ Proton API data structures
    :members:
    :undoc-members:
 
-.. autoclass:: protonvpn.vpnaccount.api_data.VPNCertCredentials
-   :members:
-   :undoc-members:
 
-.. autoclass:: protonvpn.vpnaccount.api_data.VPNSecrets
-   :members:
-   :undoc-members:
