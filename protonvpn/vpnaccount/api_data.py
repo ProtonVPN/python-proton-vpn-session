@@ -185,7 +185,7 @@ class VPNCertCredentialsFetcher:
         self._raw_api_cert_data=self._session.api_request(VPNCertCredentialsFetcher.ROUTE, jsondata=json_req)
 
     def fetch(self) -> 'VPNCertCredentials':
-        """ Return a :class:`VPNCertificate` from a local cache or fetch it
+        """ Return a :class:`VPNCertCredentials` from a local cache or fetch it
             from the API if not available.
         """
         if self._raw_api_cert_data is None:
