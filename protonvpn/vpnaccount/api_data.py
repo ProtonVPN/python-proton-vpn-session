@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass, fields, asdict
 from proton.sso import ProtonSSO
 from typing import NamedTuple, Union
