@@ -23,12 +23,5 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python",
         "Topic :: Security",
-    ],
-    entry_points={
-        "console_scripts": [
-            ['wgconf=protonvpn.tools.wgconf:main'],
-            ['vpninfo=protonvpn.tools.vpninfo:main'],
-            ['ovpnconf=protonvpn.tools.ovpncertconf:main']
-        ],
-    }
+    ]
 )
