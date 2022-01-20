@@ -1,13 +1,13 @@
 import pytest
 import json
-from protonvpn.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData
+from protonvpn.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData, VPNCertificateReload, VPNCertificateExpired
 from protonvpn.vpnaccount.api_data import VPNSettings, VPNSettingsFetcher
 from protonvpn.vpnaccount.api_data import VPNCertificate, VPNCertCredentials, VPNCertCredentialsFetcher
 from protonvpn.vpnaccount.api_data import VPNSessions
 from protonvpn.vpnaccount.api_data import VPNSecrets
 
 
-class TestVpnAccount:
+class TestVpnAccountSerialize:
     VPN_API_DATA="""
 {
 "Code": 1000,
@@ -92,35 +92,23 @@ MC4CAQAwBQYDK2VwBCIEIMP3LkF1P16bARSzAaJEcTCfYbSUqDYSlBQcF16tHn5Q\\n\
 }
 """
     def test_vpnaccount_data_unserialize(self):
-        vpnaccount = VPNSettings.from_json(TestVpnAccount.VPN_API_DATA)
+        vpnaccount = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_DATA)
         assert(vpnaccount.VPN.Name=="test")
         assert(vpnaccount.VPN.Password=="passwordtest")
     
     def test_vpnaccount_data_serialize(self):
-        vpnaccount = VPNSettings.from_json(TestVpnAccount.VPN_API_DATA)
+        vpnaccount = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_DATA)
         json.loads(vpnaccount.to_json())
 
     def test_vpnsettings_fetcher(self):
-        vpnaccount=VPNSettingsFetcher(json.loads(TestVpnAccount.VPN_API_DATA)).fetch()
+        vpnaccount=VPNSettingsFetcher(json.loads(TestVpnAccountSerialize.VPN_API_DATA)).fetch()
         assert(vpnaccount.VPN.Name=="test")
         assert(vpnaccount.VPN.Password=="passwordtest")
 
-    def test_vpnsettings_must_reload(self):
-        account=VPNAccount('test')
-        account.clear()
-        with pytest.raises(VPNAccountReloadVPNData):
-            vpnaccount=account.get_username_and_password()
-    
-    def test_vpnsettings_with_keyring(self):
-        account=VPNAccount('test')
-        account.reload_vpn_settings(VPNSettings.from_json(TestVpnAccount.VPN_API_DATA))
-        vpnaccount=account.get_username_and_password()
-        assert(vpnaccount.username=="test")
-        assert(vpnaccount.password=="passwordtest")
-        account.clear()
+
 
     def test_cert_unserialize(self):
-        cert=VPNCertificate.from_json(TestVpnAccount.VPN_CLIENT_CERT_DATA)
+        cert=VPNCertificate.from_json(TestVpnAccountSerialize.VPN_CLIENT_CERT_DATA)
         assert(cert.SerialNumber=="143175174")
         assert(cert.ClientKeyFingerprint=="Aj3O9pYE0ABRwIEG5LOcxVmMTqM2JxGOOnPZZkc8/OzM47zNoBBx0NIgiLLFwCHT5Qq7A9+MaZB5TGSuW1Focg==")
         assert(cert.ClientKey=="-----BEGIN PUBLIC KEY-----\n\
@@ -151,27 +139,71 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\n\
 -----END PUBLIC KEY-----\n")
 
     def test_cert_serialize(self):
-        cert=VPNCertificate.from_json(TestVpnAccount.VPN_CLIENT_CERT_DATA)
+        cert=VPNCertificate.from_json(TestVpnAccountSerialize.VPN_CLIENT_CERT_DATA)
         json.loads(cert.to_json())
 
     def test_secrets_unserialize(self):
-        secrets=VPNSecrets.from_json(TestVpnAccount.VPN_CLIENT_SECRET_DATA)
+        secrets=VPNSecrets.from_json(TestVpnAccountSerialize.VPN_CLIENT_SECRET_DATA)
         assert(secrets.wireguard_privatekey=="0EU72yx+FbzuKW1gSOCaSM+zcaA+AcVjv6d31nxtDH4=")
         assert(secrets.openvpn_privatekey=="-----BEGIN PRIVATE KEY-----\n\
 MC4CAQAwBQYDK2VwBCIEIMP3LkF1P16bARSzAaJEcTCfYbSUqDYSlBQcF16tHn5Q\n\
 -----END PRIVATE KEY-----\n")
 
     def test_secrets_serialize(self):
-        secrets=VPNSecrets.from_json(TestVpnAccount.VPN_CLIENT_SECRET_DATA)
+        secrets=VPNSecrets.from_json(TestVpnAccountSerialize.VPN_CLIENT_SECRET_DATA)
         json.loads(secrets.to_json())
 
     def test_cert_credentials_builder(self):
-        cert=json.loads(TestVpnAccount.VPN_CLIENT_CERT_DATA)
-        secrets=json.loads(TestVpnAccount.VPN_CLIENT_SECRET_DATA)
+        cert=json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_DATA)
+        secrets=json.loads(TestVpnAccountSerialize.VPN_CLIENT_SECRET_DATA)
         cert_cred=VPNCertCredentials.from_dict(cert, secrets)
 
     def test_sessions_unserialize(self):
-        sessions=VPNSessions.from_json(TestVpnAccount.VPN_SESSIONS_FROM_API_DATA)
+        sessions=VPNSessions.from_json(TestVpnAccountSerialize.VPN_SESSIONS_FROM_API_DATA)
         assert(len(sessions.Sessions)==2)
         assert(sessions.Sessions[0].ExitIP=='1.2.3.4')
         assert(sessions.Sessions[1].ExitIP=='5.6.7.8')
+
+
+class TestVpnAccountFunction:
+
+    def test_vpnsettings_must_reload(self):
+        account=VPNAccount('test')
+        account.clear()
+        with pytest.raises(VPNAccountReloadVPNData):
+            vpnaccount=account.get_username_and_password()
+
+    def test_vpnsettings_with_keyring(self):
+        account=VPNAccount('test')
+        account.reload_vpn_settings(VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_DATA))
+        vpnaccount=account.get_username_and_password()
+        assert(account.max_tier==0)
+        assert(account.max_connections==2)
+        assert(account.delinquent is False)
+        assert(vpnaccount.username=="test")
+        assert(vpnaccount.password=="passwordtest")
+
+        account.clear()
+    
+    def test_vpncertificate_must_reload(self):
+        account=VPNAccount('test')
+        account.clear()
+        assert(account.vpn_certificate is not None)
+        with pytest.raises(VPNCertificateReload):
+            pem_cert=account.vpn_certificate.get_vpn_client_api_pem_certificate()
+        with pytest.raises(VPNCertificateReload):
+            wg_key=account.vpn_certificate.get_vpn_client_private_wg_key()
+        with pytest.raises(VPNCertificateReload):
+            ovpn_priv_pem_key = account.vpn_certificate.get_vpn_client_private_openvpn_key()
+
+    def test_vpncertificates_with_keyring(self):
+        account=VPNAccount('test')
+        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_DATA)
+        account.reload_vpn_cert_credentials(VPNCertCredentialsFetcher(cert_dict).fetch())
+        with pytest.raises(VPNCertificateExpired):
+            pem_cert=account.vpn_certificate.get_vpn_client_api_pem_certificate()
+        with pytest.raises(VPNCertificateExpired):
+            wg_key=account.vpn_certificate.get_vpn_client_private_wg_key()
+        with pytest.raises(VPNCertificateExpired):
+            ovpn_priv_pem_key = account.vpn_certificate.get_vpn_client_private_openvpn_key()
+
