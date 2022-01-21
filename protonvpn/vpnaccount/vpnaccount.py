@@ -12,17 +12,17 @@ from .key_mgr import KeyHandler
 
 class VPNAccountReloadVPNData(Exception):
     """ VPN Account information are empty or not available and should be filled with
-        fresh user information coming from the API by calling :meth:`VPNAccount.reload_vpn_settings`
+        fresh user information coming from the API by calling :meth:`VPNAccount.vpn_reload_vpn_settings`
     """
 
 
 class VPNCertificateReload(Exception):
-    """ VPN Certificate data not available and should be reloaded by calling  :meth:`VPNAccount.reload_vpn_cert_credentials`
+    """ VPN Certificate data not available and should be reloaded by calling  :meth:`VPNAccount.vpn_reload_cert_credentials`
     """
 
 
 class VPNCertificateExpired(Exception):
-    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.reload_vpn_cert_credentials`
+    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.vpn_reload_cert_credentials`
     """
 
 
@@ -74,8 +74,8 @@ class VPNCertificate:
     def get_vpn_client_api_pem_certificate(self) -> str:
         """ X509 client certificate in PEM format, can be used to connect for client based authentication to the local agent
 
-            :raises VPNCertificateReload: : :class:`VPNAccount` must be re-populated with :meth:`reload_vpn_cert_credentials`
-            :raises VPNCertificateExpired: : certificate is expired, refresh with :meth:`reload_vpn_cert_credentials`
+            :raises VPNCertificateReload: : :class:`VPNAccount` must be re-populated with :meth:`vpn_reload_cert_credentials`
+            :raises VPNCertificateExpired: : certificate is expired, refresh with :meth:`vpn_reload_cert_credentials`
             :return: :class:`api_data.VPNCertificate.Certificate`
         """
         if self._certificate_obj is not None:
@@ -90,10 +90,10 @@ class VPNCertificate:
         """ Get Wireguard private key in base64 format, directly usable in a wireguard configuration file. This key
             is tighed to the Proton :class:`VPNCertCredentials` by its corresponding API certificate.
             If the corresponding certificate is expired an :exc:`VPNCertificateReload` will be trigged to the user, meaning
-            that the user will have to reload a new certificate and secrets using :meth:`reload_vpn_cert_credentials`.
+            that the user will have to reload a new certificate and secrets using :meth:`vpn_reload_cert_credentials`.
 
-            :raises VPNCertificateReload: : :class:`VPNAccount` must be re-populated with :meth:`reload_vpn_cert_credentials`
-            :raises VPNCertificateExpired: : certificate linked to the key is expired, refresh with :meth:`reload_vpn_cert_credentials`
+            :raises VPNCertificateReload: : :class:`VPNAccount` must be re-populated with :meth:`vpn_reload_cert_credentials`
+            :raises VPNCertificateExpired: : certificate linked to the key is expired, refresh with :meth:`vpn_reload_cert_credentials`
             :return: :class:`api_data.VPNSecrets.wireguard_privatekey`: Wireguard private key in base64 format.
         """
         if self._certificate_obj is not None:
@@ -108,8 +108,8 @@ class VPNCertificate:
         """ Get OpenVPN private key in PEM format, directly usable in a openvpn configuration file. If the corresponding
             certificate is expired an :exc:`VPNCertificateReload` will be trigged to the user.
 
-            :raises VPNCertificateReload: : :class:`VPNAccount` must be re-populated with :meth:`reload_vpn_cert_credentials`
-            :raises VPNCertificateExpired: : certificate linked to the key is expired, refresh with :meth:`reload_vpn_cert_credentials`
+            :raises VPNCertificateReload: : :class:`VPNAccount` must be re-populated with :meth:`vpn_reload_cert_credentials`
+            :raises VPNCertificateExpired: : certificate linked to the key is expired, refresh with :meth:`vpn_reload_cert_credentials`
             :return: :class:`api_data.VPNSecrets.openvpn_privatekey`: OpenVPN private key in PEM format.
         """
         if self._certificate_obj is not None:
@@ -148,7 +148,7 @@ class VPNAccount:
 
         - If the keyring does not contain such data, the user will be informed with :exc:`VPNAccountReloadVPNData` for
           VPN settings or :exc:`VPNCertificateReload` for X509 certificate and wireguard key. In that case, the client
-          code  will need to reload the data  with a with :meth:`reload_vpn_settings` or :meth:`reload_vpn_cert_credentials`
+          code  will need to reload the data  with a with :meth:`vpn_reload_vpn_settings` or :meth:`vpn_reload_cert_credentials`
           respectively.
 
         - If the data is available through the keyring, it will be used as an off-line cache.
@@ -169,8 +169,6 @@ class VPNAccount:
                 account.reload_certificate(f.fetch())
                 b64_wg_key=account.vpn_certificate.get_vpn_client_private_wg_key()
                 x509_cert=account.vpn_certificate.get_vpn_client_certificate()
-
-
     """
 
     def __init__(self, username: str):
@@ -188,7 +186,7 @@ class VPNAccount:
         keyring = self._keyring
         try:
             api_vpn_data = keyring[self._keyring_settings_name]
-            self.reload_vpn_settings(VPNSettings.from_dict(api_vpn_data))
+            self.vpn_reload_vpn_settings(VPNSettings.from_dict(api_vpn_data))
         except KeyError:
             pass
 
@@ -196,7 +194,7 @@ class VPNAccount:
             cert_data = keyring[self._keyring_certificate_name]
             secrets_data = keyring[self._keyring_secrets_name]
             vpn_cert_credentials = VPNCertCredentials.from_dict(cert_data, secrets_data)
-            self.reload_vpn_cert_credentials(vpn_cert_credentials)
+            self.vpn_reload_cert_credentials(vpn_cert_credentials)
         except KeyError:
             pass
 
@@ -237,7 +235,7 @@ class VPNAccount:
         """
         return self._vpn_certificate_holder
 
-    def reload_vpn_cert_credentials(self, cert_creds: 'VPNCertCredentials', strict=True) -> None:
+    def vpn_reload_cert_credentials(self, cert_creds: 'VPNCertCredentials', strict=True) -> None:
         """ Refresh VPN account data from a :class:`VPNCertCredentials` object.
             See the helper :class:`api_data.VPNCertCredentialsFetcher` to provide this
             object. if strict is True, various checks will be enforced on the certificate
@@ -248,7 +246,7 @@ class VPNAccount:
         keyring[self._keyring_certificate_name] = cert_creds.api_certificate.to_dict()
         keyring[self._keyring_secrets_name] = cert_creds.secrets.to_dict()
 
-    def reload_vpn_settings(self, api_vpn_data: 'VPNSettings') -> None:
+    def vpn_reload_settings(self, api_vpn_data: 'VPNSettings') -> None:
         """ Reload vpn data from :class:`api_data.VPNSettings` object.
             See the helper :class:`api_data.VPNSettingsFetcher` to provide
             this object.
@@ -268,9 +266,9 @@ class VPNAccount:
         except KeyError:
             pass
 
-    def get_username_and_password(self) -> VPNUserPass:
+    def vpn_get_username_and_password(self) -> VPNUserPass:
         """
-        :raises VPNAccountReloadVPNData: : :class:`VPNAccount` must be re-populated with `reload_vpn_settings`
+        :raises VPNAccountReloadVPNData: : :class:`VPNAccount` must be re-populated with `vpn_reload_vpn_settings`
         :return: :class:`VPNUserPass` usable credentials to login on ProtonVPN.
         """
         # VPN user and password are in vpn settings object as we simply
@@ -292,7 +290,7 @@ class VPNAccount:
             raise VPNAccountReloadVPNData
 
     @property
-    def max_connections(self) -> int:
+    def vpn_max_connections(self) -> int:
         """
         :raises VPNAccountReloadVPNData:
         :return: int the `MaxConnect` value of the acccount from :class:`api_data.VPNInfo`
@@ -313,7 +311,7 @@ class VPNAccount:
         else:
             raise VPNAccountReloadVPNData
 
-    def get_vpn_sessions(self) -> Sequence['VPNSession']:
+    def vpn_get_sessions(self) -> Sequence['VPNSession']:
         """
         :return: the list of active VPN session of the user on the infra
         """
