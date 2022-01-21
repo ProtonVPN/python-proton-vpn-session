@@ -4,6 +4,7 @@ from proton.sso import ProtonSSO
 from typing import NamedTuple, Union
 from .key_mgr import KeyHandler
 import json
+import base64
 
 class Serializable:
     def to_json(self) -> str:
@@ -94,6 +95,8 @@ class VPNSecrets(Serializable):
     """Wireguard private key encoded in base64. To be added locally by the user. The API route is not providing it"""
     openvpn_privatekey:str
     """OpenVPN private key in PEM format. To be added locally by the user. The API is not providing it"""
+    ed25519_privatekey:str
+    """Private key in ed25519 base64 format. used to check fingerprints"""
 
     @staticmethod
     def _deserialize(dict_data:dict) -> 'VPNSecrets' :
@@ -166,12 +169,17 @@ class VPNCertCredentialsFetcher:
     """ Helper class to retrieve a :class:`VPNCertCredentials` object from the API. Same
         use as :class:`VPNSettingsFetcher`. This class also generates a private/public key pair
         locally at initialization time that will be available in the :class:`VPNCertCredentials`.
+        cert_curation is in minutes.
     """
     ROUTE='/vpn/v1/certificate'
 
-    def __init__(self, _raw_data: dict =None, cert_duration: int = 1440, features=None, session=None):
-        # This will generate a new set key!
-        self._keys=KeyHandler()
+    def __init__(self, _raw_data: dict =None, _private_key=None, cert_duration: int = 1440, features=None, session=None):
+
+        if _private_key is not None:
+            self._keys=KeyHandler(private_key=_private_key)
+        else:
+            # This will generate a new set key!
+            self._keys=KeyHandler()
         self._cert_duration = str(cert_duration) + " min"
         self._session = session
         self._features = features
@@ -194,7 +202,8 @@ class VPNCertCredentialsFetcher:
         return VPNCertCredentials(
                                   VPNCertificate.from_dict(self._raw_api_cert_data),
                                   VPNSecrets(wireguard_privatekey=self._keys.x25519_sk_str,
-                                  openvpn_privatekey=self._keys.ed25519_sk_pem)
+                                  openvpn_privatekey=self._keys.ed25519_sk_pem,
+                                  ed25519_privatekey=base64.b64encode(self._keys.ed25519_sk_bytes).decode('ascii'))
                                  )
 
 class VPNSessionsFetcher:

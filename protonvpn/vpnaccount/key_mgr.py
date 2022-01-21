@@ -11,6 +11,9 @@ class KeyHandler:
     PREFIX_PK = bytes([int(x, 16) for x in '30:2A:30:05:06:03:2B:65:70:03:21:00'.split(':')])
 
     def __init__(self, private_key=None):
+        """ private key parameter must be in ed25519 format, from which we convert to x25519 format with nacl.
+            But it's not possible to convert from x25519 to ed25519.
+        """
         self._private_key, self._public_key = self.__generate_key_pair(private_key=private_key)
         tmp_ed25519_sk = self.ed25519_sk_bytes
         tmp_ed25519_pk = self.ed25519_pk_bytes

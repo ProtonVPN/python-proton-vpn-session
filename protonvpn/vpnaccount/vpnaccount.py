@@ -4,8 +4,10 @@ from dataclasses import dataclass, fields
 from proton.session.api import Session
 from typing import NamedTuple, Union
 from .api_data import VPNSettings, VPNCertificate, VPNSecrets, VPNSession, VPNCertCredentials
+from .certificates import Certificate
 from datetime import datetime
-from typing import Sequence
+from typing import Sequence, Optional
+from .key_mgr import KeyHandler
 
 class VPNAccountReloadVPNData(Exception):
     """ VPN Account information are empty or not available and should be filled with
@@ -19,6 +21,11 @@ class VPNCertificateExpired(Exception):
     """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.reload_vpn_cert_credentials`
     """
 
+class VPNCertificateFingerprintError(Exception):
+    """ VPN Certificate and private key fingerprint are not matching, regenerate a key and get a new a certificate with
+        the corresponding public key.
+    """
+
 class VPNUserPass(NamedTuple):
     """ Class responsible to hold vpn user/password credentials for authentication
     """
@@ -26,15 +33,30 @@ class VPNUserPass(NamedTuple):
     password: str
 
 class VPNCertificate:
-    """ Class responsible to hold vpn public key API raw certificates and
+    """ Class responsible to hold vpn public key API RAW certificates and
         and its associated private key for authentication.
     """
     def __init__(self):
-        self._vpn_cert_creds=None
-        pass
+        self._raw_vpn_cert_creds : Optional[VPNSecrets]= None
+        self._certificate_obj = None
 
-    def refresh(self, vpn_cert_creds:'VPNCertCredentials'):
-        self._vpn_cert_creds = vpn_cert_creds
+    def refresh_and_check(self, raw_vpn_cert_creds:'VPNCertCredentials', strict):
+        """ Refresh certificate and secrets. They are tested for consistency and must share the
+            same fingerprint and be valid, otherwhise an Exception will be raised.
+        """
+        # Get fingerprint from ED25519 private key
+        keyhandler = KeyHandler(private_key=base64.b64decode(raw_vpn_cert_creds.secrets.ed25519_privatekey))
+        fingerprint_from_secrets=keyhandler.get_proton_fingerprint_from_x25519_pk(keyhandler.x25519_pk_bytes)
+        # Get fingerprint from Certificate public key
+        certificate = Certificate(cert_pem=raw_vpn_cert_creds.api_certificate.Certificate)
+        fingerprint_from_certificate=certificate.proton_fingerprint
+        # Refuse to store unmatching fingerprints when strict equal True
+        if strict:
+            if fingerprint_from_secrets != fingerprint_from_certificate:
+                raise VPNCertificateFingerprintError
+
+        self._raw_vpn_cert_creds = raw_vpn_cert_creds
+        self._certificate_obj = Certificate(cert_pem=raw_vpn_cert_creds.api_certificate.Certificate)
 
     def get_vpn_client_api_pem_certificate(self) -> str:
         """ X509 client certificate in PEM format, can be used to connect for client based authentication to the local agent
@@ -43,10 +65,9 @@ class VPNCertificate:
             :raises VPNCertificateExpired: : certificate is expired, refresh with :meth:`reload_vpn_cert_credentials`
             :return: :class:`api_data.VPNCertificate.Certificate`
         """
-        if self._vpn_cert_creds is not None:
-            refresh_date = datetime.fromtimestamp(self._vpn_cert_creds.api_certificate.RefreshTime)
-            if datetime.now() < refresh_date:
-                return self._vpn_cert_creds.api_certificate.Certificate
+        if self._certificate_obj is not None:
+            if self._certificate_obj.has_valid_date:
+                return self._certificate_obj.get_as_pem()
             else:
                 raise VPNCertificateExpired
         else:
@@ -62,10 +83,9 @@ class VPNCertificate:
             :raises VPNCertificateExpired: : certificate linked to the key is expired, refresh with :meth:`reload_vpn_cert_credentials`
             :return: :class:`api_data.VPNSecrets.wireguard_privatekey`: Wireguard private key in base64 format.
         """
-        if self._vpn_cert_creds is not None:
-            refresh_date = datetime.fromtimestamp(self._vpn_cert_creds.api_certificate.RefreshTime)
-            if datetime.now() < refresh_date:
-                return self._vpn_cert_creds.secrets.wireguard_privatekey
+        if self._certificate_obj is not None:
+            if self._certificate_obj.has_valid_date:
+                return self._raw_vpn_cert_creds.secrets.wireguard_privatekey
             else:
                 raise VPNCertificateExpired
         else:
@@ -79,15 +99,30 @@ class VPNCertificate:
             :raises VPNCertificateExpired: : certificate linked to the key is expired, refresh with :meth:`reload_vpn_cert_credentials`
             :return: :class:`api_data.VPNSecrets.openvpn_privatekey`: OpenVPN private key in PEM format.
         """
-        if self._vpn_cert_creds is not None:
-            refresh_date = datetime.fromtimestamp(self._vpn_cert_creds.api_certificate.RefreshTime)
-            if datetime.now() < refresh_date:
-                return self._vpn_cert_creds.secrets.openvpn_privatekey
+        if self._certificate_obj is not None:
+            if self._certificate_obj.has_valid_date:
+                return self._raw_vpn_cert_creds.secrets.openvpn_privatekey
             else:
                 raise VPNCertificateExpired
         else:
             raise VPNCertificateReload
 
+    @property
+    def vpn_certificate_validity_period(self) -> Optional[float]:
+        """ remaining time the certificate is valid, in seconds. < 0 : certificate is not valid anymore, if None
+            we don't have a certificate.
+        """
+        if self._certificate_obj is None:
+            return None
+        else:
+            return self._certificate_obj.validity_period
+
+    @property
+    def proton_extensions(self):
+        if self._certificate_obj is None:
+            return None
+        else:
+            return self._certificate_obj.proton_extensions
 
 class VPNAccount:
     """
@@ -131,7 +166,7 @@ class VPNAccount:
         """
         self._vpn_plan=None
         self._vpn_settings=None
-        self._vpn_certificate=VPNCertificate()
+        self._vpn_certificate_holder=VPNCertificate()
         self._keyring_settings_name=self.__keyring_key_name(username+"_settings")
         self._keyring_certificate_name=self.__keyring_key_name(username+"_cert")
         self._keyring_secrets_name=self.__keyring_key_name(username+"_secrets")
@@ -184,21 +219,23 @@ class VPNAccount:
         return Loader.get('keyring')()
 
     @property
-    def vpn_certificate(self) -> VPNCertificate:
+    def vpn_certificate_holder(self) -> VPNCertificate:
         """ Return the object responsible to manage vpn client certificates and privates keys.
         """
-        return self._vpn_certificate
+        return self._vpn_certificate_holder
 
 
-    def reload_vpn_cert_credentials(self, cert_creds: 'VPNCertCredentials') -> None:
+    def reload_vpn_cert_credentials(self, cert_creds: 'VPNCertCredentials',strict=True) -> None:
         """ Refresh VPN account data from a :class:`VPNCertCredentials` object.
             See the helper :class:`api_data.VPNCertCredentialsFetcher` to provide this
-            object.
+            object. if strict is True, various checks will be enforced on the certificate
+            before inserting it to the keyring (see refresh method)
         """
+        self.vpn_certificate_holder.refresh_and_check(cert_creds, strict)
         keyring = self._keyring
         keyring[self._keyring_certificate_name]=cert_creds.api_certificate.to_dict()
         keyring[self._keyring_secrets_name]=cert_creds.secrets.to_dict()
-        self.vpn_certificate.refresh(cert_creds)
+
 
     def reload_vpn_settings(self, api_vpn_data: 'VPNSettings') -> None:
         """ Reload vpn data from :class:`api_data.VPNSettings` object.
@@ -270,3 +307,13 @@ class VPNAccount:
         :return: the list of active VPN session of the user on the infra
         """
         raise NotImplementedError
+
+    ##### LEGACY BACKWARD COMPAT INTERFACE ####
+    def get_client_api_pem_certificate(self) -> str:
+        return self.vpn_certificate_holder.get_vpn_client_api_pem_certificate()
+
+    def get_client_private_wg_key(self) -> str:
+        return self.vpn_certificate_holder.get_vpn_client_private_wg_key()
+
+    def get_client_private_openvpn_key(self) -> str:
+        return self.vpn_certificate_holder.get_vpn_client_private_openvpn_key()
