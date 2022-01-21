@@ -9,22 +9,28 @@ from datetime import datetime
 from typing import Sequence, Optional
 from .key_mgr import KeyHandler
 
+
 class VPNAccountReloadVPNData(Exception):
     """ VPN Account information are empty or not available and should be filled with
         fresh user information coming from the API by calling :meth:`VPNAccount.reload_vpn_settings`
     """
+
+
 class VPNCertificateReload(Exception):
     """ VPN Certificate data not available and should be reloaded by calling  :meth:`VPNAccount.reload_vpn_cert_credentials`
     """
+
 
 class VPNCertificateExpired(Exception):
     """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.reload_vpn_cert_credentials`
     """
 
+
 class VPNCertificateFingerprintError(Exception):
     """ VPN Certificate and private key fingerprint are not matching, regenerate a key and get a new a certificate with
         the corresponding public key.
     """
+
 
 class VPNUserPass(NamedTuple):
     """ Class responsible to hold vpn user/password credentials for authentication
@@ -32,24 +38,31 @@ class VPNUserPass(NamedTuple):
     username: str
     password: str
 
+
 class VPNCertificate:
     """ Class responsible to hold vpn public key API RAW certificates and
         and its associated private key for authentication.
     """
     def __init__(self):
-        self._raw_vpn_cert_creds : Optional[VPNSecrets]= None
+        self._raw_vpn_cert_creds: Optional[VPNSecrets] = None
         self._certificate_obj = None
 
-    def refresh_and_check(self, raw_vpn_cert_creds:'VPNCertCredentials', strict):
+    def refresh_and_check(self, raw_vpn_cert_creds: 'VPNCertCredentials', strict):
         """ Refresh certificate and secrets. They are tested for consistency and must share the
             same fingerprint and be valid, otherwhise an Exception will be raised.
         """
         # Get fingerprint from ED25519 private key
-        keyhandler = KeyHandler(private_key=base64.b64decode(raw_vpn_cert_creds.secrets.ed25519_privatekey))
-        fingerprint_from_secrets=keyhandler.get_proton_fingerprint_from_x25519_pk(keyhandler.x25519_pk_bytes)
+        keyhandler = KeyHandler(
+            private_key=base64.b64decode(raw_vpn_cert_creds.secrets.ed25519_privatekey)
+        )
+        fingerprint_from_secrets = keyhandler.get_proton_fingerprint_from_x25519_pk(
+            keyhandler.x25519_pk_bytes
+        )
+
         # Get fingerprint from Certificate public key
         certificate = Certificate(cert_pem=raw_vpn_cert_creds.api_certificate.Certificate)
-        fingerprint_from_certificate=certificate.proton_fingerprint
+        fingerprint_from_certificate = certificate.proton_fingerprint
+
         # Refuse to store unmatching fingerprints when strict equal True
         if strict:
             if fingerprint_from_secrets != fingerprint_from_certificate:
@@ -160,29 +173,29 @@ class VPNAccount:
 
     """
 
-    def __init__(self, username:str):
+    def __init__(self, username: str):
         """
         :param user_name: username handle for the persistent account
         """
-        self._vpn_plan=None
-        self._vpn_settings=None
-        self._vpn_certificate_holder=VPNCertificate()
-        self._keyring_settings_name=self.__keyring_key_name(username+"_settings")
-        self._keyring_certificate_name=self.__keyring_key_name(username+"_cert")
-        self._keyring_secrets_name=self.__keyring_key_name(username+"_secrets")
+        self._vpn_plan = None
+        self._vpn_settings = None
+        self._vpn_certificate_holder = VPNCertificate()
+        self._keyring_settings_name = self.__keyring_key_name(username + "_settings")
+        self._keyring_certificate_name = self.__keyring_key_name(username + "_cert")
+        self._keyring_secrets_name = self.__keyring_key_name(username + "_secrets")
         # try to load info from the keyring, ignore error as if it fails, user of this component
         # will have to reload
         keyring = self._keyring
         try:
-            api_vpn_data=keyring[self._keyring_settings_name]
+            api_vpn_data = keyring[self._keyring_settings_name]
             self.reload_vpn_settings(VPNSettings.from_dict(api_vpn_data))
         except KeyError:
             pass
 
         try:
-            cert_data=keyring[self._keyring_certificate_name]
-            secrets_data=keyring[self._keyring_secrets_name]
-            vpn_cert_credentials=VPNCertCredentials.from_dict(cert_data, secrets_data)
+            cert_data = keyring[self._keyring_certificate_name]
+            secrets_data = keyring[self._keyring_secrets_name]
+            vpn_cert_credentials = VPNCertCredentials.from_dict(cert_data, secrets_data)
             self.reload_vpn_cert_credentials(vpn_cert_credentials)
         except KeyError:
             pass
@@ -198,7 +211,7 @@ class VPNAccount:
         """
         return base64.b32encode(account_name.encode('utf8')).decode('ascii').rstrip('=').lower()
 
-    def __keyring_key_name(self, account_name : str) -> str:
+    def __keyring_key_name(self, account_name: str) -> str:
         """Helper function to get the keyring key for account_name
 
         :param account_name: normalized account_name
@@ -224,8 +237,7 @@ class VPNAccount:
         """
         return self._vpn_certificate_holder
 
-
-    def reload_vpn_cert_credentials(self, cert_creds: 'VPNCertCredentials',strict=True) -> None:
+    def reload_vpn_cert_credentials(self, cert_creds: 'VPNCertCredentials', strict=True) -> None:
         """ Refresh VPN account data from a :class:`VPNCertCredentials` object.
             See the helper :class:`api_data.VPNCertCredentialsFetcher` to provide this
             object. if strict is True, various checks will be enforced on the certificate
@@ -233,9 +245,8 @@ class VPNAccount:
         """
         self.vpn_certificate_holder.refresh_and_check(cert_creds, strict)
         keyring = self._keyring
-        keyring[self._keyring_certificate_name]=cert_creds.api_certificate.to_dict()
-        keyring[self._keyring_secrets_name]=cert_creds.secrets.to_dict()
-
+        keyring[self._keyring_certificate_name] = cert_creds.api_certificate.to_dict()
+        keyring[self._keyring_secrets_name] = cert_creds.secrets.to_dict()
 
     def reload_vpn_settings(self, api_vpn_data: 'VPNSettings') -> None:
         """ Reload vpn data from :class:`api_data.VPNSettings` object.
@@ -243,7 +254,7 @@ class VPNAccount:
             this object.
         """
         keyring = self._keyring
-        keyring[self._keyring_settings_name]=api_vpn_data.to_dict()
+        keyring[self._keyring_settings_name] = api_vpn_data.to_dict()
         self._vpn_settings = api_vpn_data
 
     def clear(self) -> None:
@@ -262,7 +273,7 @@ class VPNAccount:
         :raises VPNAccountReloadVPNData: : :class:`VPNAccount` must be re-populated with `reload_vpn_settings`
         :return: :class:`VPNUserPass` usable credentials to login on ProtonVPN.
         """
-        # VPN user and password are in vpn settings object as we simply 
+        # VPN user and password are in vpn settings object as we simply
         # cache what's coming from the API.
         if self._vpn_settings is not None:
             return VPNUserPass(self._vpn_settings.VPN.Name, self._vpn_settings.VPN.Password)
@@ -308,7 +319,7 @@ class VPNAccount:
         """
         raise NotImplementedError
 
-    ##### LEGACY BACKWARD COMPAT INTERFACE ####
+    # #### LEGACY BACKWARD COMPAT INTERFACE ####
     def get_client_api_pem_certificate(self) -> str:
         return self.vpn_certificate_holder.get_vpn_client_api_pem_certificate()
 
