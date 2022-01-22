@@ -12,7 +12,7 @@ from .key_mgr import KeyHandler
 
 class VPNAccountReloadVPNData(Exception):
     """ VPN Account information are empty or not available and should be filled with
-        fresh user information coming from the API by calling :meth:`VPNAccount.vpn_reload_vpn_settings`
+        fresh user information coming from the API by calling :meth:`VPNAccount.vpn_reload_settings`
     """
 
 
@@ -152,7 +152,7 @@ class VPNAccount:
 
         - If the keyring does not contain such data, the user will be informed with :exc:`VPNAccountReloadVPNData` for
           VPN settings or :exc:`VPNCertificateReload` for X509 certificate and wireguard key. In that case, the client
-          code  will need to reload the data  with a with :meth:`vpn_reload_vpn_settings` or :meth:`vpn_reload_cert_credentials`
+          code  will need to reload the data  with a with :meth:`vpn_reload_settings` or :meth:`vpn_reload_cert_credentials`
           respectively.
 
         - If the data is available through the keyring, it will be used as an off-line cache.
@@ -167,12 +167,12 @@ class VPNAccount:
             default_account_name=sso.get_default_session()
             account=VPNAccount(default_account_name)
             try:
-                b64_wg_key=account.vpn_certificate.get_client_private_wg_key()
+                b64_wg_key=account.vpn_get_certificate_holder().vpn_client_private_wg_key
             except VPNCertificateReload:
                 f = VPNCertCredentialsFetcher(session=sso.get_session(proton_username))
-                account.reload_certificate(f.fetch())
-                b64_wg_key=account.vpn_certificate.get_vpn_client_private_wg_key()
-                x509_cert=account.vpn_certificate.get_vpn_client_certificate()
+                account.vpn_reload_cert_credentials(f.fetch())
+                b64_wg_key=account.vpn_get_certificate_holder().vpn_client_private_wg_key
+                x509_cert=account.vpn_get_certificate_holder().vpn_client_api_pem_certificate
     """
 
     def __init__(self, username: str):
@@ -244,7 +244,7 @@ class VPNAccount:
             object. if strict is True, various checks will be enforced on the certificate
             before inserting it to the keyring (see refresh method)
         """
-        self.vpn_certificate_holder.refresh_and_check(cert_creds, strict)
+        self._vpn_certificate_holder.refresh_and_check(cert_creds, strict)
         keyring = self._keyring
         keyring[self._keyring_certificate_name] = cert_creds.api_certificate.to_dict()
         keyring[self._keyring_secrets_name] = cert_creds.secrets.to_dict()
@@ -271,7 +271,7 @@ class VPNAccount:
 
     def vpn_get_username_and_password(self) -> VPNUserPass:
         """
-        :raises VPNAccountReloadVPNData: : :class:`VPNAccount` must be re-populated with `vpn_reload_vpn_settings`
+        :raises VPNAccountReloadVPNData: : :class:`VPNAccount` must be re-populated with `vpn_reload_settings`
         :return: :class:`VPNUserPass` usable credentials to login on ProtonVPN.
         """
         # VPN user and password are in vpn settings object as we simply
