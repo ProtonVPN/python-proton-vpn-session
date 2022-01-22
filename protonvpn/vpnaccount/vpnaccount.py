@@ -186,7 +186,7 @@ class VPNAccount:
         keyring = self._keyring
         try:
             api_vpn_data = keyring[self._keyring_settings_name]
-            self.vpn_reload_vpn_settings(VPNSettings.from_dict(api_vpn_data))
+            self.vpn_reload_settings(VPNSettings.from_dict(api_vpn_data))
         except KeyError:
             pass
 
