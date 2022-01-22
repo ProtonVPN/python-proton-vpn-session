@@ -71,7 +71,8 @@ class VPNCertificate:
         self._raw_vpn_cert_creds = raw_vpn_cert_creds
         self._certificate_obj = Certificate(cert_pem=raw_vpn_cert_creds.api_certificate.Certificate)
 
-    def get_vpn_client_api_pem_certificate(self) -> str:
+    @property
+    def vpn_client_api_pem_certificate(self) -> str:
         """ X509 client certificate in PEM format, can be used to connect for client based authentication to the local agent
 
             :raises VPNCertificateReload: : :class:`VPNAccount` must be re-populated with :meth:`vpn_reload_cert_credentials`
@@ -86,7 +87,8 @@ class VPNCertificate:
         else:
             raise VPNCertificateReload
 
-    def get_vpn_client_private_wg_key(self) -> str:
+    @property
+    def vpn_client_private_wg_key(self) -> str:
         """ Get Wireguard private key in base64 format, directly usable in a wireguard configuration file. This key
             is tighed to the Proton :class:`VPNCertCredentials` by its corresponding API certificate.
             If the corresponding certificate is expired an :exc:`VPNCertificateReload` will be trigged to the user, meaning
@@ -104,7 +106,8 @@ class VPNCertificate:
         else:
             raise VPNCertificateReload
 
-    def get_vpn_client_private_openvpn_key(self) -> str:
+    @property
+    def vpn_client_private_openvpn_key(self) -> str:
         """ Get OpenVPN private key in PEM format, directly usable in a openvpn configuration file. If the corresponding
             certificate is expired an :exc:`VPNCertificateReload` will be trigged to the user.
 
@@ -136,6 +139,7 @@ class VPNCertificate:
             return None
         else:
             return self._certificate_obj.proton_extensions
+
 
 class VPNAccount:
     """
@@ -229,8 +233,7 @@ class VPNAccount:
         from proton.loader import Loader
         return Loader.get('keyring')()
 
-    @property
-    def vpn_certificate_holder(self) -> VPNCertificate:
+    def vpn_get_certificate_holder(self) -> VPNCertificate:
         """ Return the object responsible to manage vpn client certificates and privates keys.
         """
         return self._vpn_certificate_holder
