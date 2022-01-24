@@ -80,7 +80,7 @@ class VPNCertificate:
             :return: :class:`api_data.VPNCertificate.Certificate`
         """
         if self._certificate_obj is not None:
-            if self._certificate_obj.has_valid_date:
+            if self._certificate_obj.validity_period > 60:
                 return self._certificate_obj.get_as_pem()
             else:
                 raise VPNCertificateExpired
@@ -99,7 +99,7 @@ class VPNCertificate:
             :return: :class:`api_data.VPNSecrets.wireguard_privatekey`: Wireguard private key in base64 format.
         """
         if self._certificate_obj is not None:
-            if self._certificate_obj.has_valid_date:
+            if self._certificate_obj.validity_period > 60:
                 return self._raw_vpn_cert_creds.secrets.wireguard_privatekey
             else:
                 raise VPNCertificateExpired
@@ -116,10 +116,16 @@ class VPNCertificate:
             :return: :class:`api_data.VPNSecrets.openvpn_privatekey`: OpenVPN private key in PEM format.
         """
         if self._certificate_obj is not None:
-            if self._certificate_obj.has_valid_date:
+            if self._certificate_obj.validity_period > 60:
                 return self._raw_vpn_cert_creds.secrets.openvpn_privatekey
             else:
                 raise VPNCertificateExpired
+        else:
+            raise VPNCertificateReload
+
+    def get_vpn_client_private_ed25519_key(self) -> bytes:
+        if self._certificate_obj is not None:
+            return base64.b64decode(self._raw_vpn_cert_creds.secrets.ed25519_privatekey)
         else:
             raise VPNCertificateReload
 
