@@ -2,7 +2,7 @@ from curses import raw
 import pytest
 import json
 import base64
-from protonvpn.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData, VPNCertificateReload, VPNCertificateExpired, VPNCertificateFingerprintError
+from protonvpn.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData, VPNCertificateNotAvailableError, VPNCertificateExpiredError, VPNCertificateFingerprintError
 from protonvpn.vpnaccount.api_data import VPNSettings, VPNSettingsFetcher
 from protonvpn.vpnaccount.api_data import VPNCertificate, VPNCertCredentials, VPNCertCredentialsFetcher
 from protonvpn.vpnaccount.api_data import VPNSessions
@@ -105,15 +105,15 @@ class TestVpnAccountFunction:
         account=VPNAccount('test')
         account.clear()
         with pytest.raises(VPNAccountReloadVPNData):
-            vpnaccount=account.get_username_and_password()
+            vpnaccount=account.vpn_get_username_and_password()
         account.clear()
 
     def test_vpnsettings_with_keyring(self):
         account=VPNAccount('test')
-        account.reload_vpn_settings(VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA))
-        vpnaccount=account.get_username_and_password()
+        account.vpn_reload_settings(VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA))
+        vpnaccount=account.vpn_get_username_and_password()
         assert(account.max_tier==0)
-        assert(account.max_connections==2)
+        assert(account.vpn_max_connections==2)
         assert(account.delinquent is False)
         assert(vpnaccount.username=="test")
         assert(vpnaccount.password=="passwordtest")
@@ -122,13 +122,13 @@ class TestVpnAccountFunction:
     def test_vpncertificate_must_reload(self):
         account=VPNAccount('test')
         account.clear()
-        assert(account.vpn_certificate_holder is not None)
-        with pytest.raises(VPNCertificateReload):
-            pem_cert=account.vpn_certificate_holder.get_vpn_client_api_pem_certificate()
-        with pytest.raises(VPNCertificateReload):
-            wg_key=account.vpn_certificate_holder.get_vpn_client_private_wg_key()
-        with pytest.raises(VPNCertificateReload):
-            ovpn_priv_pem_key = account.vpn_certificate_holder.get_vpn_client_private_openvpn_key()
+        assert(account.vpn_get_certificate_holder() is not None)
+        with pytest.raises(VPNCertificateNotAvailableError):
+            pem_cert=account.vpn_get_certificate_holder().vpn_client_api_pem_certificate()
+        with pytest.raises(VPNCertificateNotAvailableError):
+            wg_key=account.vpn_get_certificate_holder().vpn_client_private_wg_key()
+        with pytest.raises(VPNCertificateNotAvailableError):
+            ovpn_priv_pem_key = account.vpn_get_certificate_holder().vpn_client_private_openvpn_key()
         account.clear()
 
     def test_vpncertificates_with_keyring(self):
@@ -137,12 +137,12 @@ class TestVpnAccountFunction:
         cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
         ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
         kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
-        account.reload_vpn_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch())
+        account.vpn_reload_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch())
 
         # WARNING :
         # - Don't give X25519 private key to the fetcher, it's expecting ED25519 private key ONLY to generate X25519 private key.
         with pytest.raises(VPNCertificateFingerprintError):
-            account.reload_vpn_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.x25519_sk_bytes).fetch())
+            account.vpn_reload_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.x25519_sk_bytes).fetch())
 
         account.clear()
 
