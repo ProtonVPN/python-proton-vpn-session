@@ -19,7 +19,7 @@
   - echo -e "[ProxyList]\nhttp 172.20.0.127 3128\n" > /etc/proxychains.conf
   - apt-get update
   - apt-get install -y --no-install-recommends git
-  - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.protontech.ch/ProtonVPN/linuxrefactored/python-proton-core.git
+  - git clone --branch dev-mickael https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.protontech.ch/ProtonVPN/linuxrefactored/python-proton-core.git
   - cd python-proton-core && pip3 install -r requirements.txt && pip3 install . && cd ..
   script:
   # We need to install it otherwise entry points are not accessible by testsuite
