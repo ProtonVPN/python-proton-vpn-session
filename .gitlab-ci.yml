@@ -17,6 +17,10 @@
   - sysctl -w net.ipv6.conf.default.disable_ipv6=0
   # FIXME: would be nice to resolve proxy.plabs.ch instead of hardcoding one value, or even better to parse http_proxy
   - echo -e "[ProxyList]\nhttp 172.20.0.127 3128\n" > /etc/proxychains.conf
+  - apt-get update
+  - apt-get install -y --no-install-recommends git
+  - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.protontech.ch/ProtonVPN/linuxrefactored/python-proton-core.git
+  - cd python-proton-core && pip3 install -r requirements.txt && pip3 install . && cd ..
   script:
   # We need to install it otherwise entry points are not accessible by testsuite
   # FIXME: we need to fill loader with static data to make sure our test is reproductible
