@@ -27,7 +27,15 @@ Exceptions
    :members:
    :inherited-members:
 
-.. autoclass:: protonvpn.vpnaccount.VPNCertificateReload
+.. autoclass:: protonvpn.vpnaccount.VPNCertificateNotAvailableError
+   :members:
+   :inherited-members:
+
+.. autoclass:: protonvpn.vpnaccount.VPNCertificateExpiredError
+   :members:
+   :inherited-members:
+
+.. autoclass:: protonvpn.vpnaccount.VPNCertificateNeedRefreshError
    :members:
    :inherited-members:
 
