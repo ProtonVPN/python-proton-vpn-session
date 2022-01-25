@@ -338,10 +338,10 @@ class VPNAccount:
 
     # #### LEGACY BACKWARD COMPAT INTERFACE ####
     def get_client_api_pem_certificate(self) -> str:
-        return self.vpn_certificate_holder.get_vpn_client_api_pem_certificate()
+        return self.vpn_get_certificate_holder().vpn_client_api_pem_certificate
 
     def get_client_private_wg_key(self) -> str:
-        return self.vpn_certificate_holder.get_vpn_client_private_wg_key()
+        return self.vpn_get_certificate_holder().vpn_client_private_wg_key
 
     def get_client_private_openvpn_key(self) -> str:
-        return self.vpn_certificate_holder.get_vpn_client_private_openvpn_key()
+        return self.vpn_get_certificate_holder().vpn_client_private_openvpn_key
