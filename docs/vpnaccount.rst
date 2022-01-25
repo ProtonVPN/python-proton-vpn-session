@@ -5,6 +5,9 @@ VPNAccount
    :members:
    :special-members: __init__
 
+.. autoclass:: protonvpn.vpnaccount.vpnaccount.VPNCertificate
+   :members:
+
 Credentials
 -----------
 
