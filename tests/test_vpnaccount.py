@@ -146,5 +146,14 @@ class TestVpnAccountFunction:
 
         account.clear()
 
+    def test_certificate_duration(self):
+        account=VPNAccount('test')
+        account.clear()
+        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
+        ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
+        kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
+        account.vpn_reload_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch())
+        assert(account.vpn_get_certificate_holder().vpn_certificate_duration == 86401.0)
+
     def test_expired_certificate(self):
         pass

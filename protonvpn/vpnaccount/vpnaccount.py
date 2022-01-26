@@ -5,7 +5,7 @@ from proton.session.api import Session
 from typing import NamedTuple, Union
 from .api_data import VPNSettings, VPNCertificate, VPNSecrets, VPNSession, VPNCertCredentials
 from .certificates import Certificate
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Sequence, Optional
 from .key_mgr import KeyHandler
 
@@ -155,6 +155,15 @@ class VPNCertificate:
             return None
         else:
             return self._certificate_obj.proton_extensions
+
+    @property
+    def vpn_certificate_duration(self) -> Optional[float]:
+        """ certificate range in seconds, even if not valid anymore. None we don't have a certificate
+        """
+        if self._certificate_obj is None:
+            return None
+        else:
+            return self._certificate_obj.duration.total_seconds()
 
 
 class VPNAccount:

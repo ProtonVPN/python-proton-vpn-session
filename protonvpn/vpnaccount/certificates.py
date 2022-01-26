@@ -240,6 +240,11 @@ class Certificate:
     def issued_date(self) -> datetime.datetime:
         return self._cert.not_valid_before
 
+    @property
+    def duration(self) -> datetime.timedelta:
+        """ certification duration """
+        return self.validity_date - self.issued_date
+
     @classmethod
     def get_proton_fingerprint_from_x25519_pk(cls, x25519_pk: bytes) -> str:
         return base64.b64encode(hashlib.sha512(x25519_pk).digest()).decode("ascii")
