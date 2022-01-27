@@ -5,6 +5,7 @@ from typing import NamedTuple, Union
 from .key_mgr import KeyHandler
 import json
 import base64
+from typing import List
 
 class Serializable:
     def to_json(self) -> str:
@@ -40,7 +41,7 @@ class VPNInfo(Serializable):
     """ Maximum tier value that this account can vpn connect to """
     MaxConnect: int
     """ Maximum number of simultaneaous session on the infrastructure"""
-    Groups: list
+    Groups: List[str]
     """ List of groups that this account belongs to """
     NeedConnectionAllocation: bool
 
@@ -55,7 +56,7 @@ class VPNSettings(Serializable):
     HasPaymentMethod: int
     Credit: int
     Currency: str
-    Warnings: list
+    Warnings: List[str]
 
     @staticmethod
     def _deserialize(dict_data:dict) -> 'VPNSettings' :
@@ -117,7 +118,7 @@ class VPNSession(Serializable):
 @dataclass
 class VPNSessions(Serializable):
     """ The list of active VPN session of an account on the infra """
-    Sessions: list[VPNSession]
+    Sessions: List[VPNSession]
 
     def __len__(self):
         return len(self.Sessions)
