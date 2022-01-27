@@ -15,15 +15,15 @@ class VPNAccountReloadVPNData(Exception):
         fresh user information coming from the API by calling :meth:`VPNAccount.vpn_reload_settings`
     """
 class VPNCertificateNotAvailableError(Exception):
-    """ VPN Certificate data not available and should be reloaded by calling  :meth:`VPNAccount.reload_vpn_cert_credentials`
+    """ VPN Certificate data not available and should be reloaded by calling  :meth:`VPNAccount.vpn_reload_cert_credentials`
     """
 
 class VPNCertificateExpiredError(Exception):
-    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.reload_vpn_cert_credentials`
+    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.vpn_reload_cert_credentials`
     """
 
 class VPNCertificateNeedRefreshError(Exception):
-    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.reload_vpn_cert_credentials`
+    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNAccount.vpn_reload_cert_credentials`
     """
 
 
@@ -76,8 +76,8 @@ class VPNCertificate:
     def vpn_client_api_pem_certificate(self) -> str:
         """ X509 client certificate in PEM format, can be used to connect for client based authentication to the local agent
 
-            :raises VPNCertificateNotAvailableError: : certificate cannot be found :class:`VPNAccount` must be populated with :meth:`reload_vpn_cert_credentials`
-            :raises VPNCertificateNeedRefreshError: : certificate is expiring soon, refresh asap with :meth:`reload_vpn_cert_credentials`
+            :raises VPNCertificateNotAvailableError: : certificate cannot be found :class:`VPNAccount` must be populated with :meth:`vpn_reload_cert_credentials`
+            :raises VPNCertificateNeedRefreshError: : certificate is expiring soon, refresh asap with :meth:`vpn_reload_cert_credentials`
             :raises VPNCertificateExpiredError: : certificate is expired
             :return: :class:`api_data.VPNCertificate.Certificate`
         """
@@ -96,10 +96,10 @@ class VPNCertificate:
         """ Get Wireguard private key in base64 format, directly usable in a wireguard configuration file. This key
             is tighed to the Proton :class:`VPNCertCredentials` by its corresponding API certificate.
             If the corresponding certificate is expired an :exc:`VPNCertificateNotAvailableError` will be trigged to the user, meaning
-            that the user will have to reload a new certificate and secrets using :meth:`reload_vpn_cert_credentials`.
+            that the user will have to reload a new certificate and secrets using :meth:`vpn_reload_cert_credentials`.
 
-            :raises VPNCertificateNotAvailableError: : certificate cannot be found :class:`VPNAccount` must be populated with :meth:`reload_vpn_cert_credentials`
-            :raises VPNCertificateNeedRefreshError: : certificate linked to the key is expiring soon, refresh asap with :meth:`reload_vpn_cert_credentials`
+            :raises VPNCertificateNotAvailableError: : certificate cannot be found :class:`VPNAccount` must be populated with :meth:`vpn_reload_cert_credentials`
+            :raises VPNCertificateNeedRefreshError: : certificate linked to the key is expiring soon, refresh asap with :meth:`vpn_reload_cert_credentials`
             :raises VPNCertificateExpiredError: : certificate is expired
             :return: :class:`api_data.VPNSecrets.wireguard_privatekey`: Wireguard private key in base64 format.
         """
@@ -118,8 +118,8 @@ class VPNCertificate:
         """ Get OpenVPN private key in PEM format, directly usable in a openvpn configuration file. If the corresponding
             certificate is expired an :exc:`VPNCertificateNotAvailableError` will be trigged to the user.
 
-            :raises VPNCertificateNotAvailableError: : certificate cannot be found :class:`VPNAccount` must be populated with :meth:`reload_vpn_cert_credentials`
-            :raises VPNCertificateNeedRefreshError: : certificate linked to the key is expiring soon, refresh asap with :meth:`reload_vpn_cert_credentials`
+            :raises VPNCertificateNotAvailableError: : certificate cannot be found :class:`VPNAccount` must be populated with :meth:`vpn_reload_cert_credentials`
+            :raises VPNCertificateNeedRefreshError: : certificate linked to the key is expiring soon, refresh asap with :meth:`vpn_reload_cert_credentials`
             :raises VPNCertificateExpiredError: : certificate is expired
             :return: :class:`api_data.VPNSecrets.openvpn_privatekey`: OpenVPN private key in PEM format.
         """
@@ -177,7 +177,7 @@ class VPNAccount:
 
         - If the keyring does not contain such data, the user will be informed with :exc:`VPNAccountReloadVPNData` for
           VPN settings or :exc:`VPNCertificateNotAvailableError` for X509 certificate and wireguard key. In that case, the client
-          code  will need to reload the data  with a with :meth:`reload_vpn_settings` or :meth:`reload_vpn_cert_credentials`
+          code  will need to reload the data  with a with :meth:`vpn_reload_settings` or :meth:`vpn_reload_cert_credentials`
           respectively.
 
         - If the data is available through the keyring, it will be used as an off-line cache.

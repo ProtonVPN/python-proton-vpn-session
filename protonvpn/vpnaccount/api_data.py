@@ -178,7 +178,7 @@ class VPNCertCredentialsFetcher:
         if _private_key is not None:
             self._keys=KeyHandler(private_key=_private_key)
         else:
-            # This will generate a new set key!
+            # This will generate a new set key with a different fingerprint.
             self._keys=KeyHandler()
         self._cert_duration = str(cert_duration) + " min"
         self._session = session
