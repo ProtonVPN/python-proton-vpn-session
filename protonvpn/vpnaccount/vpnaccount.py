@@ -258,10 +258,11 @@ class VPNAccount:
         from proton.loader import Loader
         return Loader.get('keyring')()
 
-    def vpn_get_certificate_holder(self) -> VPNCertificate:
-        """ Return the object responsible to manage vpn client certificates and privates keys.
+    def get_credentials(self) -> 'VPNCredentials':
+        """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
+            provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
         """
-        return self._vpn_certificate_holder
+        return VPNCredentials(self)
 
     def vpn_reload_cert_credentials(self, cert_creds: 'VPNCertCredentials', strict=True) -> None:
         """ Refresh VPN account data from a :class:`VPNCertCredentials` object.
@@ -294,7 +295,12 @@ class VPNAccount:
         except KeyError:
             pass
 
-    def vpn_get_username_and_password(self) -> VPNUserPass:
+    def try_go_get_certificate_holder(self) -> VPNCertificate:
+        """ Return the object responsible to manage vpn client certificates and privates keys.
+        """
+        return self._vpn_certificate_holder
+
+    def try_go_get_username_and_password(self) -> VPNUserPass:
         """
         :raises VPNAccountReloadVPNData: : :class:`VPNAccount` must be re-populated with `vpn_reload_settings`
         :return: :class:`VPNUserPass` usable credentials to login on ProtonVPN.
@@ -345,7 +351,7 @@ class VPNAccount:
         """
         raise NotImplementedError
 
-    # #### LEGACY BACKWARD COMPAT INTERFACE ####
+    # #### LEGACY BACKWARD COMPAT INTERFACE TO BE REMOVED ####
     def get_client_api_pem_certificate(self) -> str:
         return self.vpn_get_certificate_holder().vpn_client_api_pem_certificate
 
@@ -354,3 +360,21 @@ class VPNAccount:
 
     def get_client_private_openvpn_key(self) -> str:
         return self.vpn_get_certificate_holder().vpn_client_private_openvpn_key
+
+    def vpn_get_certificate_holder(self) -> VPNCertificate:
+        return self.try_go_get_certificate_holder()
+
+    def vpn_get_username_and_password(self) -> VPNUserPass:
+        return self.try_go_get_username_and_password()
+
+class VPNCredentials:
+    """ Interface to :class:`protonvpn.vpnconnection.interfaces.VPNCredentials
+    """
+    def __init__(self, vpnaccount: VPNAccount):
+        self._vpnaccount = vpnaccount
+
+    def vpn_get_certificate_holder(self) -> VPNCertificate:
+        return self._vpnaccount.try_go_get_certificate_holder()
+
+    def vpn_get_username_and_password(self) -> VPNUserPass:
+        return self._vpnaccount.try_go_get_username_and_password()
