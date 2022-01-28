@@ -368,7 +368,8 @@ class VPNAccount:
         return self.try_go_get_username_and_password()
 
 class VPNCredentials:
-    """ Interface to :class:`protonvpn.vpnconnection.interfaces.VPNCredentials
+    """ Interface to :class:`protonvpn.vpnconnection.interfaces.VPNCredentials`
+        See :meth:`VPNAccount.get_credentials()` to get one.
     """
     def __init__(self, vpnaccount: VPNAccount):
         self._vpnaccount = vpnaccount

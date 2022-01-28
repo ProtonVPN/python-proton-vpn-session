@@ -5,11 +5,19 @@ VPNAccount
    :members:
    :special-members: __init__
 
+
+VPNCredentials
+---------------
+
+.. autoclass:: protonvpn.vpnaccount.VPNCredentials
+   :members:
+   :undoc-members:
+
+Credentials details
+###################
+
 .. autoclass:: protonvpn.vpnaccount.vpnaccount.VPNCertificate
    :members:
-
-Credentials
------------
 
 .. autoclass:: protonvpn.vpnaccount.VPNUserPass
    :members:
@@ -42,8 +50,11 @@ Exceptions
    :members:
    :inherited-members:
 
+API Helpers
+------------
+
 Proton API data fetchers
--------------------------
+#########################
 
 .. autoclass:: protonvpn.vpnaccount.api_data.VPNSettingsFetcher
    :special-members: __init__
@@ -54,7 +65,7 @@ Proton API data fetchers
    :members:
 
 Proton API data structures
---------------------------
+###########################
 
 
 .. autoclass:: protonvpn.vpnaccount.api_data.VPNSettings
