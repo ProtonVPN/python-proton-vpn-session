@@ -1,7 +1,7 @@
-VPNAccount
+VPNSession
 ----------
 
-.. autoclass:: protonvpn.vpnaccount.VPNSession
+.. autoclass:: proton.vpn.session.VPNSession
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -10,32 +10,32 @@ VPNAccount
 VPNCredentials
 ---------------
 
-.. autoclass:: protonvpn.vpnaccount.VPNCredentials
+.. autoclass:: proton.vpn.session.VPNCredentials
    :members:
    :undoc-members:
 
 Credentials structure
 ######################
 
-.. autoclass:: protonvpn.vpnaccount.VPNCertificate
+.. autoclass:: proton.vpn.session.VPNCertificate
    :members:
 
-.. autoclass:: protonvpn.vpnaccount.VPNUserPass
+.. autoclass:: proton.vpn.session.VPNUserPass
    :members:
 
 
 Exceptions
 ----------
 
-.. autoclass:: protonvpn.vpnaccount.VPNCertificateNotAvailableError
+.. autoclass:: proton.vpn.session.VPNCertificateNotAvailableError
    :members:
    :inherited-members:
 
-.. autoclass:: protonvpn.vpnaccount.VPNCertificateExpiredError
+.. autoclass:: proton.vpn.session.VPNCertificateExpiredError
    :members:
    :inherited-members:
 
-.. autoclass:: protonvpn.vpnaccount.VPNCertificateNeedRefreshError
+.. autoclass:: proton.vpn.session.VPNCertificateNeedRefreshError
    :members:
    :inherited-members:
 
@@ -44,22 +44,22 @@ Proton API data structures
 ---------------------------
 
 
-.. autoclass:: protonvpn.vpnaccount.api_data.VPNSettings
+.. autoclass:: proton.vpn.session.api_data.VPNSettings
    :members:
    :undoc-members:
 
-.. autoclass:: protonvpn.vpnaccount.api_data.VPNInfo
+.. autoclass:: proton.vpn.session.api_data.VPNInfo
    :members:
    :undoc-members:
 
-.. autoclass:: protonvpn.vpnaccount.api_data.VPNCertificate
+.. autoclass:: proton.vpn.session.api_data.VPNCertificate
    :members:
    :undoc-members:
 
-.. autoclass:: protonvpn.vpnaccount.api_data.VPNSecrets
+.. autoclass:: proton.vpn.session.api_data.VPNSecrets
    :members:
    :undoc-members:
 
-.. autoclass:: protonvpn.vpnaccount.api_data.APIVPNSession
+.. autoclass:: proton.vpn.session.api_data.APIVPNSession
    :members:
    :undoc-members:

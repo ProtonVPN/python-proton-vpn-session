@@ -313,7 +313,7 @@ class VPNSession(Session):
 
 class VPNCredentials:
     """ Interface to :class:`protonvpn.vpnconnection.interfaces.VPNCredentials`
-        See :meth:`VPNSession.get_credentials()` to get one.
+        See :meth:`VPNSession.get_vpn_credentials()` to get one.
     """
     def __init__(self, vpnaccount: VPNSession):
         self._vpnaccount = vpnaccount
