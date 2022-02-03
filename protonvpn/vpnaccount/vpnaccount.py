@@ -1,4 +1,4 @@
-from .api_data import VPNSettings, VPNCertificate, VPNSecrets, VPNSession, VPNCertCredentials
+from .api_data import VPNSettings, VPNCertificate, VPNSecrets, APIVPNSession, VPNCertCredentials
 from .api_data import VPNSettingsFetcher, VPNCertCredentialsFetcher
 from .certificates import Certificate
 from .key_mgr import KeyHandler
@@ -192,10 +192,10 @@ class VPNSession(Session):
                 vpnsession.authenticate('USERNAME','PASSWORD')
 
             try:
-                wireguard_private_key=vpnsession.get_credentials().vpn_get_certificate_holder().vpn_client_private_wg_key
+                wireguard_private_key=vpnsession.get_vpn_credentials().vpn_get_certificate_holder().vpn_client_private_wg_key
             except VPNCertificateNeedRefreshError:
                 vpnsession.refresh()
-                wireguard_private_key=vpnsession.get_credentials().vpn_get_certificate_holder().vpn_client_private_wg_key
+                wireguard_private_key=vpnsession.get_vpn_credentials().vpn_get_certificate_holder().vpn_client_private_wg_key
 
     """
 
@@ -244,7 +244,7 @@ class VPNSession(Session):
             self.refresh()
         return auth
 
-    def get_credentials(self) -> 'VPNCredentials':
+    def get_vpn_credentials(self) -> 'VPNCredentials':
         """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
             provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
         """
@@ -252,7 +252,7 @@ class VPNSession(Session):
 
     def refresh(self) -> None:
         """ Refresh VPNSession info from the API. This assumes that the session is authenticated.
-            if not authenticated, this will raise :exc:`ProtonAPIAuthenticationNeeded` to the user
+            if not authenticated, this will raise :exc:`proton.session.exceptions.ProtonAPIAuthenticationNeeded` to the user.
         """
         self._vpninfofetcher.fetch_vpninfo()
         self._vpncertcredsfetcher.fetch_certcreds()
@@ -304,9 +304,9 @@ class VPNSession(Session):
         else:
             return None
 
-    def vpn_get_sessions(self) -> Sequence['VPNSession']:
+    def vpn_get_sessions(self) -> Sequence['APIVPNSession']:
         """
-        :return: the list of active VPN session of the user on the infra
+        :return: the list of active VPN session of the authenticated user on the infra
         """
         raise NotImplementedError
 

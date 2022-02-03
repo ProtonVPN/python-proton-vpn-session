@@ -104,27 +104,27 @@ class VPNSecrets(Serializable):
         return VPNSecrets(**{name:dict_data[name] for name in __fields})
 
 @dataclass
-class VPNSession(Serializable):
+class APIVPNSession(Serializable):
     SessionID: str
     ExitIP: str
     Protocol: str
 
     @staticmethod
-    def _deserialize(dict_data:dict) -> 'VPNSession' :
-        __fields=[v.name for v in fields(VPNSession)]
-        return VPNSession(**{name:dict_data[name] for name in __fields})
+    def _deserialize(dict_data:dict) -> 'APIVPNSession' :
+        __fields=[v.name for v in fields(APIVPNSession)]
+        return APIVPNSession(**{name:dict_data[name] for name in __fields})
 
 @dataclass
 class VPNSessions(Serializable):
     """ The list of active VPN session of an account on the infra """
-    Sessions: List[VPNSession]
+    Sessions: List[APIVPNSession]
 
     def __len__(self):
         return len(self.Sessions)
 
     @staticmethod
     def _deserialize(dict_data:dict) -> 'VPNSessions' :
-        session_list= [ VPNSession.from_dict(value) for value in dict_data['Sessions'] ]
+        session_list= [ APIVPNSession.from_dict(value) for value in dict_data['Sessions'] ]
         return VPNSessions(Sessions=session_list)
 
 class VPNSettingsFetcher:
