@@ -184,7 +184,7 @@ class VPNSession(Session):
         .. code-block::
 
             from proton.sso import ProtonSSO
-            from protonvpn.vpnaccount import VPNSession
+            from proton.vpn.session import VPNSession
 
             sso=ProtonSSO()
             vpnsession=sso.get_default_session(override_class=VPNSession)

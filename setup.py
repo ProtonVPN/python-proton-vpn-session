@@ -11,7 +11,7 @@ setup(
     url="https://github.com/ProtonMail/python-proton-core",
     install_requires=["requests", "bcrypt", "python-gnupg", "pyopenssl", "importlib-metadata; python_version < '3.8'"],
     tests_requires=['pyotp'],
-    packages=find_namespace_packages(include=['protonvpn.*']),
+    packages=find_namespace_packages(include=['proton.*']),
     include_package_data=True,
     license="GPLv3",
     platforms="OS Independent",
