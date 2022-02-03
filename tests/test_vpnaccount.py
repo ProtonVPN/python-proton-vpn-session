@@ -2,7 +2,8 @@ from curses import raw
 import pytest
 import json
 import base64
-from protonvpn.vpnaccount import VPNAccount, VPNUserPass, VPNAccountReloadVPNData, VPNCertificateNotAvailableError, VPNCertificateExpiredError, VPNCertificateFingerprintError
+from proton.sso import ProtonSSO
+from protonvpn.vpnaccount import VPNSession, VPNUserPass, VPNCertificateNotAvailableError, VPNCertificateExpiredError, VPNCertificateFingerprintError
 from protonvpn.vpnaccount.api_data import VPNSettings, VPNSettingsFetcher
 from protonvpn.vpnaccount.api_data import VPNCertificate, VPNCertCredentials, VPNCertCredentialsFetcher
 from protonvpn.vpnaccount.api_data import VPNSessions
@@ -102,58 +103,89 @@ MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\n\
 class TestVpnAccountFunction:
 
     def test_vpnsettings_must_reload(self):
-        account=VPNAccount('test')
-        account.clear()
-        with pytest.raises(VPNAccountReloadVPNData):
-            vpnaccount=account.vpn_get_username_and_password()
-        account.clear()
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        vpnsession.logout()
+        user_pass=vpnsession.get_credentials().vpn_get_username_and_password()
+        assert(user_pass == None)
 
     def test_vpnsettings_with_keyring(self):
-        account=VPNAccount('test')
-        account.vpn_reload_settings(VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA))
-        vpnaccount=account.vpn_get_username_and_password()
-        assert(account.max_tier==0)
-        assert(account.vpn_max_connections==2)
-        assert(account.delinquent is False)
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
+        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
+        ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
+        kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
+        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch()
+        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
+        vpnsession.__setstate__(vpndata)
+
+        vpnaccount=vpnsession.get_credentials().vpn_get_username_and_password()
+        assert(vpnsession.max_tier==0)
+        assert(vpnsession.vpn_max_connections==2)
+        assert(vpnsession.delinquent is False)
         assert(vpnaccount.username=="test")
         assert(vpnaccount.password=="passwordtest")
-        account.clear()
+        vpnsession.logout()
     
     def test_vpncertificate_must_reload(self):
-        account=VPNAccount('test')
-        account.clear()
-        assert(account.vpn_get_certificate_holder() is not None)
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        assert(vpnsession.get_credentials().vpn_get_certificate_holder() is not None)
         with pytest.raises(VPNCertificateNotAvailableError):
-            pem_cert=account.vpn_get_certificate_holder().vpn_client_api_pem_certificate()
+            pem_cert=vpnsession.get_credentials().vpn_get_certificate_holder().vpn_client_api_pem_certificate()
         with pytest.raises(VPNCertificateNotAvailableError):
-            wg_key=account.vpn_get_certificate_holder().vpn_client_private_wg_key()
+            wg_key=vpnsession.get_credentials().vpn_get_certificate_holder().vpn_client_private_wg_key()
         with pytest.raises(VPNCertificateNotAvailableError):
-            ovpn_priv_pem_key = account.vpn_get_certificate_holder().vpn_client_private_openvpn_key()
-        account.clear()
+            ovpn_priv_pem_key = vpnsession.get_credentials().vpn_get_certificate_holder().vpn_client_private_openvpn_key()
+        vpnsession.logout()
 
     def test_vpncertificates_with_keyring(self):
-        account=VPNAccount('test')
-        account.clear()
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
         cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
         ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
         kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
-        account.vpn_reload_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch())
-
         # WARNING :
         # - Don't give X25519 private key to the fetcher, it's expecting ED25519 private key ONLY to generate X25519 private key.
+        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.x25519_sk_bytes).fetch()
+        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
         with pytest.raises(VPNCertificateFingerprintError):
-            account.vpn_reload_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.x25519_sk_bytes).fetch())
+            vpnsession.__setstate__(vpndata)
 
-        account.clear()
+        vpnsession.logout()
 
     def test_certificate_duration(self):
-        account=VPNAccount('test')
-        account.clear()
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
         cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
         ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
         kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
-        account.vpn_reload_cert_credentials(VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch())
-        assert(account.vpn_get_certificate_holder().vpn_certificate_duration == 86401.0)
+        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch()
+        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
+        vpnsession.__setstate__(vpndata)
+
+        certificate=vpnsession.get_credentials().vpn_get_certificate_holder()
+        assert(certificate.vpn_certificate_duration == 86401.0)
 
     def test_expired_certificate(self):
-        pass
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        sso=ProtonSSO()
+        vpnsession=sso.get_session('tests', override_class=VPNSession)
+        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
+        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
+        ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
+        kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
+        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch()
+        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
+        vpnsession.__setstate__(vpndata)
+
+        certificate=vpnsession.get_credentials().vpn_get_certificate_holder()
+
+        with pytest.raises(VPNCertificateExpiredError):
+            pem_cert = certificate.vpn_client_api_pem_certificate()

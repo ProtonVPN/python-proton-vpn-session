@@ -1,11 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, fields, asdict
-from proton.sso import ProtonSSO
-from typing import NamedTuple, Union
 from .key_mgr import KeyHandler
 import json
 import base64
 from typing import List
+from proton.session.api import sync_wrapper
 
 class Serializable:
     def to_json(self) -> str:
@@ -142,6 +141,14 @@ class VPNSettingsFetcher:
     def _fetch_raw_data(self) -> None:
         self._raw_data = self._session.api_request(VPNSettingsFetcher.ROUTE)
 
+    async def _async_fetch_raw_data(self) -> None:
+        self._raw_data = await self._session.async_api_request(VPNSettingsFetcher.ROUTE)
+
+    async def async_fetch(self) -> 'VPNSettings':
+        if self._raw_data is None:
+            await self._async_fetch_raw_data()
+        return VPNSettings.from_dict(self._raw_data)
+
     def fetch(self) -> 'VPNSettings':
         """ Return a :class:`VPNSettings` from a local cache or fetch it
             from the API if not available.
@@ -150,8 +157,23 @@ class VPNSettingsFetcher:
             self._fetch_raw_data()
         return VPNSettings.from_dict(self._raw_data)
 
+    async def async_fetch_vpninfo(self, no_condition_check=False) -> None:
+        from proton.session import Session, ProtonAPIError
 
-class VPNCertCredentials(NamedTuple):
+        self._session._requests_lock(no_condition_check)
+        try:
+            vpninfo = await self._session.async_api_request(VPNSettingsFetcher.ROUTE, no_condition_check=True)
+            self._session._vpninfo = VPNSettings.from_dict(vpninfo)
+        except ProtonAPIError:
+            raise
+        finally:
+            self._session._requests_unlock(no_condition_check)
+
+    fetch_vpninfo = sync_wrapper(async_fetch_vpninfo)
+
+
+@dataclass
+class VPNCertCredentials(Serializable):
     """
         A Tuple object containing API certificate and user secrets
     """
@@ -206,6 +228,30 @@ class VPNCertCredentialsFetcher:
                                   openvpn_privatekey=self._keys.ed25519_sk_pem,
                                   ed25519_privatekey=base64.b64encode(self._keys.ed25519_sk_bytes).decode('ascii'))
                                  )
+
+    async def async_fetch_certcreds(self, no_condition_check=False) -> None:
+        from proton.session import Session, ProtonAPIError
+
+        self._session._requests_lock(no_condition_check)
+        try:
+            json_req = {"ClientPublicKey": self._keys.ed25519_pk_pem,
+                        "Duration": self._cert_duration
+                        }
+            if self._features:
+                json_req["Features"] = self._features
+            raw_api_cert_data = await self._session.async_api_request(VPNCertCredentialsFetcher.ROUTE, jsondata=json_req, no_condition_check=True)
+            self._session._vpncertcreds = VPNCertCredentials(
+                                                    VPNCertificate.from_dict(raw_api_cert_data),
+                                                    VPNSecrets(wireguard_privatekey=self._keys.x25519_sk_str,
+                                                    openvpn_privatekey=self._keys.ed25519_sk_pem,
+                                                    ed25519_privatekey=base64.b64encode(self._keys.ed25519_sk_bytes).decode('ascii'))
+                                                    )
+        except ProtonAPIError:
+            raise
+        finally:
+            self._session._requests_unlock(no_condition_check)
+
+    fetch_certcreds = sync_wrapper(async_fetch_certcreds)
 
 class VPNSessionsFetcher:
     """ Helper class to retrieve a :class:`VPNSessions` object from the API. If
