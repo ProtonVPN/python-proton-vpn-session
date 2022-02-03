@@ -63,6 +63,12 @@ bandit-sast:
 pages:
   image: python:3.10.0-slim-bullseye
   script:
+  - apt-get update
+  - pip3 install --user --upgrade pip
+  - pip3 install --user --upgrade setuptools
+  - apt-get install -y --no-install-recommends git
+  - git clone --branch dev-mickael https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.protontech.ch/ProtonVPN/linuxrefactored/python-proton-core.git
+  - cd python-proton-core && pip3 install -r requirements.txt && pip3 install --user . && cd ..
   - pip install -r requirements.txt
   - pip install sphinx sphinx-rtd-theme
   - pip install .
@@ -70,8 +76,6 @@ pages:
   artifacts:
     paths:
     - public
-  only:
-  - master
 
 test-buster:
   extends: .test
