@@ -220,7 +220,7 @@ class VPNSession(Session):
 
     def __getstate__(self):
         d = super().__getstate__()
-        if self._vpninfo and self._vpncertcreds:
+        if self._vpninfo and self._vpncertcreds and d != {}:
             d['vpn'] = {'vpninfo' : self._vpninfo.to_dict(), 'certcreds' : self._vpncertcreds.to_dict()}
         return d
 
