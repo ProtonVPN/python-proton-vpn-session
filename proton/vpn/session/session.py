@@ -319,8 +319,10 @@ class VPNCredentials:
     def __init__(self, vpnaccount: VPNSession):
         self._vpnaccount = vpnaccount
 
-    def vpn_get_certificate_holder(self) -> Optional[VPNAuthenticationKeys]:
+    @property
+    def authentication_keys(self) -> Optional[VPNAuthenticationKeys]:
         return self._vpnaccount._try_go_get_certificate_holder()
 
-    def vpn_get_username_and_password(self) -> Optional[VPNUserPass]:
+    @property
+    def username_and_password(self) -> Optional[VPNUserPass]:
         return self._vpnaccount._try_go_get_username_and_password()
