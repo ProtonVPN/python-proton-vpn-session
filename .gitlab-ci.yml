@@ -28,7 +28,7 @@
   # then we won't need that
   - pip3 install --user -r requirements.txt
   - pip3 install --user --editable .
-  - proxychains python3 -m pytest --cov=protonvpn --junitxml=report.xml tests/
+  - proxychains python3 -m pytest --cov=proton/vpn/session --junitxml=report.xml tests/
   - python3-coverage xml -o cov.xml
   artifacts:
     reports:
