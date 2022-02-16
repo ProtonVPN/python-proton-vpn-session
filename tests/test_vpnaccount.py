@@ -121,9 +121,9 @@ class TestVpnAccountFunction:
         vpnsession.__setstate__(vpndata)
 
         vpnaccount=vpnsession.get_vpn_credentials().username_and_password
-        assert(vpnsession.max_tier==0)
-        assert(vpnsession.vpn_max_connections==2)
-        assert(vpnsession.delinquent is False)
+        assert(vpnsession.info.max_tier==0)
+        assert(vpnsession.info.max_connections==2)
+        assert(vpnsession.info.delinquent is False)
         assert(vpnaccount.username=="test")
         assert(vpnaccount.password=="passwordtest")
         vpnsession.logout()
