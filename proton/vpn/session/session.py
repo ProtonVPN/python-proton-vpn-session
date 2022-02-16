@@ -288,7 +288,8 @@ class VPNSession(Session):
             self.refresh()
         return auth
 
-    def get_vpn_credentials(self) -> 'VPNCredentials':
+    @property
+    def credentials(self) -> 'VPNCredentials':
         """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
             provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
         """
