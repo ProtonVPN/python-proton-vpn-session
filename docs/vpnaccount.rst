@@ -27,15 +27,7 @@ Credentials structure
 Exceptions
 ----------
 
-.. autoclass:: proton.vpn.session.VPNCertificateNotAvailableError
-   :members:
-   :inherited-members:
-
-.. autoclass:: proton.vpn.session.VPNCertificateExpiredError
-   :members:
-   :inherited-members:
-
-.. autoclass:: proton.vpn.session.VPNCertificateNeedRefreshError
+.. automodule:: proton.vpn.session.exceptions
    :members:
    :inherited-members:
 

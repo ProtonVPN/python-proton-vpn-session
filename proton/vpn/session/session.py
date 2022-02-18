@@ -6,7 +6,11 @@ import base64
 from dataclasses import dataclass, fields
 from proton.session.api import Session
 from proton.session import Session
-from typing import Sequence, Optional,NamedTuple, Union
+from typing import Sequence, Optional, NamedTuple, Union
+from .exceptions import (VPNCertificateExpiredError,
+                         VPNCertificateFingerprintError,
+                         VPNCertificateNeedRefreshError,
+                         VPNCertificateNotAvailableError)
 
 
 class VPNUserPassCredentials(NamedTuple):
