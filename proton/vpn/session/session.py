@@ -13,27 +13,31 @@ class VPNCertificateNotAvailableError(Exception):
     """ VPN Certificate data not available and should be reloaded by calling  :meth:`VPNSession.refresh`
     """
 
+
 class VPNCertificateExpiredError(Exception):
     """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNSession.refresh`
     """
 
+
 class VPNCertificateNeedRefreshError(Exception):
     """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNSession.refresh`
     """
+
 
 class VPNCertificateFingerprintError(Exception):
     """ VPN Certificate and private key fingerprint are not matching, regenerate a key and get a new a certificate with
         the corresponding public key.
     """
 
-class VPNUserPass(NamedTuple):
+
+class VPNUserPassCredentials(NamedTuple):
     """ Class responsible to hold vpn user/password credentials for authentication
     """
     username: str
     password: str
 
 
-class VPNAuthenticationKeys:
+class VPNPubkeyCredentials:
     """ Class responsible to hold vpn public key API RAW certificates and
         and its associated private key for authentication.
     """
@@ -66,7 +70,7 @@ class VPNAuthenticationKeys:
         self._certificate_obj = Certificate(cert_pem=raw_vpn_cert_creds.api_certificate.Certificate)
 
     @property
-    def api_pem_certificate(self) -> str:
+    def certificate_pem(self) -> str:
         """ X509 client certificate in PEM format, can be used to connect for client based authentication to the local agent
 
             :raises VPNCertificateNotAvailableError: : certificate cannot be found :class:`VPNSession` must be populated with :meth:`VPNSession.refresh`
@@ -85,7 +89,7 @@ class VPNAuthenticationKeys:
             raise VPNCertificateNotAvailableError
 
     @property
-    def private_wg_key(self) -> str:
+    def wg_private_key(self) -> str:
         """ Get Wireguard private key in base64 format, directly usable in a wireguard configuration file. This key
             is tighed to the Proton :class:`VPNCertCredentials` by its corresponding API certificate.
             If the corresponding certificate is expired an :exc:`VPNCertificateNotAvailableError` will be trigged to the user, meaning
@@ -107,7 +111,7 @@ class VPNAuthenticationKeys:
             raise VPNCertificateNotAvailableError
 
     @property
-    def private_openvpn_key(self) -> str:
+    def openvpn_private_key(self) -> str:
         """ Get OpenVPN private key in PEM format, directly usable in a openvpn configuration file. If the corresponding
             certificate is expired an :exc:`VPNCertificateNotAvailableError` will be trigged to the user.
 
@@ -127,14 +131,14 @@ class VPNAuthenticationKeys:
             raise VPNCertificateNotAvailableError
 
     @property
-    def private_ed25519_key(self) -> bytes:
+    def ed_255519_private_key(self) -> bytes:
         if self._certificate_obj is not None:
             return base64.b64decode(self._raw_vpn_cert_creds.secrets.ed25519_privatekey)
         else:
             raise VPNCertificateNotAvailableError
 
     @property
-    def certificate_validity_period(self) -> Optional[float]:
+    def certificate_validity_remaining(self) -> Optional[float]:
         """ remaining time the certificate is valid, in seconds.
 
             - < 0 : certificate is not valid anymore
@@ -164,7 +168,7 @@ class VPNAuthenticationKeys:
             return self._certificate_obj.duration.total_seconds()
 
 
-class VPNInformation:
+class VPNAccount:
 
     def __init__(self, vpnsession):
         self.__vpnsession = vpnsession
@@ -244,11 +248,11 @@ class VPNSession(Session):
     """
 
     def __init__(self, *args, **kwargs):
-        self._vpninfo=None
+        self._vpninfo = None
         self._vpninfofetcher = VPNSettingsFetcher(session=self)
-        self._vpncertcreds=None
+        self._vpncertcreds = None
         self._vpncertcredsfetcher = VPNCertCredentialsFetcher(session=self)
-        self._vpn_certificate_holder = VPNAuthenticationKeys()
+        self._vpn_pubkey_credentials = VPNPubkeyCredentials()
         super().__init__(*args, **kwargs)
 
     def __setstate__(self, data):
@@ -256,8 +260,8 @@ class VPNSession(Session):
             self._vpninfo = VPNSettingsFetcher(_raw_data=data['vpn']['vpninfo']).fetch()
             private_key_bytes = base64.b64decode(data['vpn']['certcreds']['secrets']['ed25519_privatekey'])
             self._vpncertcreds = VPNCertCredentialsFetcher(_raw_data=data['vpn']['certcreds']['api_certificate'],_private_key=private_key_bytes).fetch()
-            self._vpn_certificate_holder = VPNAuthenticationKeys()
-            self._vpn_certificate_holder._refresh_and_check(self._vpncertcreds, strict=True)
+            self._vpn_pubkey_credentials = VPNPubkeyCredentials()
+            self._vpn_pubkey_credentials._refresh_and_check(self._vpncertcreds, strict=True)
             super().__setstate__(data)
         except KeyError:
             pass
@@ -283,17 +287,10 @@ class VPNSession(Session):
             :return: True if authentication succeeded, False otherwise.
             :rtype: bool
         """
-        auth=super().authenticate(*args)
+        auth = super().authenticate(*args)
         if auth:
             self.refresh()
         return auth
-
-    @property
-    def credentials(self) -> 'VPNCredentials':
-        """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
-            provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
-        """
-        return VPNCredentials(self)
 
     def refresh(self) -> None:
         """ Refresh VPNSession info from the API. This assumes that the session is authenticated.
@@ -301,27 +298,34 @@ class VPNSession(Session):
         """
         self._vpninfofetcher.fetch_vpninfo()
         self._vpncertcredsfetcher.fetch_certcreds()
-        self._vpn_certificate_holder._refresh_and_check(self._vpncertcreds, strict=True)
+        self._vpn_pubkey_credentials._refresh_and_check(self._vpncertcreds, strict=True)
 
-    def _try_go_get_certificate_holder(self) -> Optional[VPNAuthenticationKeys]:
+    def _try_go_get_certificate_holder(self) -> Optional[VPNPubkeyCredentials]:
         """ Return the object responsible to manage vpn client certificates and privates keys.
         """
-        return self._vpn_certificate_holder
+        return self._vpn_pubkey_credentials
 
-    def _try_go_get_username_and_password(self) -> Optional[VPNUserPass]:
+    def _try_go_get_username_and_password(self) -> Optional[VPNUserPassCredentials]:
         """
-        :return: :class:`VPNUserPass` usable credentials to login on ProtonVPN.
+        :return: :class:`VPNUserPassCredentials` usable credentials to login on ProtonVPN.
         """
         # VPN user and password are in vpn settings object as we simply
         # cache what's coming from the API.
         if self._vpninfo is not None:
-            return VPNUserPass(self._vpninfo.VPN.Name, self._vpninfo.VPN.Password)
+            return VPNUserPassCredentials(self._vpninfo.VPN.Name, self._vpninfo.VPN.Password)
         else:
             return None
 
     @property
-    def info(self):
-        return VPNInformation(self)
+    def vpn_credentials(self) -> 'VPNCredentials':
+        """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
+            provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
+        """
+        return VPNCredentials(self)
+
+    @property
+    def vpn_account(self):
+        return VPNAccount(self)
 
 
 class VPNCredentials:
@@ -332,9 +336,9 @@ class VPNCredentials:
         self._vpnaccount = vpnaccount
 
     @property
-    def authentication_keys(self) -> Optional[VPNAuthenticationKeys]:
+    def pubkey_credentials(self) -> Optional[VPNPubkeyCredentials]:
         return self._vpnaccount._try_go_get_certificate_holder()
 
     @property
-    def username_and_password(self) -> Optional[VPNUserPass]:
+    def userpass_credentials(self) -> Optional[VPNUserPassCredentials]:
         return self._vpnaccount._try_go_get_username_and_password()
