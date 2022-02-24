@@ -4,7 +4,6 @@ from .certificates import Certificate
 from .key_mgr import KeyHandler
 import base64
 from dataclasses import dataclass, fields
-from proton.session.api import Session
 from proton.session import Session
 from typing import Sequence, Optional, NamedTuple, Union
 from .exceptions import (VPNCertificateExpiredError,
@@ -309,6 +308,16 @@ class VPNSession(Session):
     @property
     def vpn_account(self):
         return VPNAccount(self)
+
+
+    @staticmethod
+    def get_session(username:str = None) -> "VPNSession":
+        from proton.sso import ProtonSSO
+        sso=ProtonSSO()
+        if username:
+            return sso.get_session(username, override_class=VPNSession)
+
+        return sso.get_default_session(override_class=VPNSession)
 
 
 class VPNCredentials:
