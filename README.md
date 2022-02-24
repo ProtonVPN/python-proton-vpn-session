@@ -1,2 +1,2 @@
-# Python Protonvpn Account
+# Python Protonvpn Session
 
