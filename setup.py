@@ -3,7 +3,7 @@
 from setuptools import setup, find_namespace_packages
 
 setup(
-    name="protonvpn-vpnaccount",
+    name="protonvpn-session",
     version="0.0.0",
     description="ProtonVPN Credentials wrapper",
     author="Proton Technologies",
