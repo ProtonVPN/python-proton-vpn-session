@@ -7,7 +7,7 @@ Welcome to python-protonvpn-account's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   vpnaccount
+   vpnsession
 
 Indices and tables
 ==================

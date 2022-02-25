@@ -202,30 +202,25 @@ class VPNSession(Session):
             - ProtonVPN X509 certificates signed by the API.
             - Wireguard private key.
 
-        - If the keyring does not contain such data, the user will be informed by receiving a `None` object when trying
-          to get them.
+        - If the keyring does not contain such data or is expired, the user will be informed by receiving a exception when trying
+          to get them and the user will have to refresh the data.
 
         - If the data is available through the keyring, it will be used as an off-line cache.
-
-        - If the data is available, but expired, an exception will be raised to the user.
 
         Simple example use :
 
         .. code-block::
 
-            from proton.sso import ProtonSSO
             from proton.vpn.session import VPNSession
 
-            sso=ProtonSSO()
-            vpnsession=sso.get_default_session(override_class=VPNSession)
+            vpnsession=VPNSession.get_session()
             if not vpnsession.authenticated:
                 vpnsession.authenticate('USERNAME','PASSWORD')
-
             try:
-                wireguard_private_key=vpnsession.get_vpn_credentials().vpn_get_certificate_holder().vpn_client_private_wg_key
+                wireguard_private_key=vpnsession.vpn_credentials.pubkey_credentials.wg_private_key
             except VPNCertificateNeedRefreshError:
                 vpnsession.refresh()
-                wireguard_private_key=vpnsession.get_vpn_credentials().vpn_get_certificate_holder().vpn_client_private_wg_key
+                wireguard_private_key=vpnsession.vpn_credentials.pubkey_credentials.wg_private_key
 
     """
 
@@ -253,6 +248,22 @@ class VPNSession(Session):
         if self._vpninfo and self._vpncertcreds and d != {}:
             d['vpn'] = {'vpninfo' : self._vpninfo.to_dict(), 'certcreds' : self._vpncertcreds.to_dict()}
         return d
+
+    @staticmethod
+    def get_session(username:str = None) -> "VPNSession":
+        """ Helper function to get a :class:`VPNSession` object for a specific user or the default
+            session if user is not given. The session might be already be authenticated as this helper
+            function relies on :class:`proton.sso.ProtonSSO` to retrieve it.
+
+            Return :class:`VPNSession`
+        """
+        from proton.sso import ProtonSSO
+        sso=ProtonSSO()
+        if username:
+            return sso.get_session(username, override_class=VPNSession)
+
+        return sso.get_default_session(override_class=VPNSession)
+
 
     def authenticate(self, *args) -> bool:
         """Authenticate VPNSession. If the authentication is successfull, it will refresh as well :
@@ -310,20 +321,7 @@ class VPNSession(Session):
         return VPNAccount(self)
 
 
-    @staticmethod
-    def get_session(username:str = None) -> "VPNSession":
-        """ Helper function to get a :class:`VPNSession` object for a specific user or the default
-            session if user is not given. The session might be already be authenticated as this helper
-            function relies on :class:`proton.sso.ProtonSSO` to retrieve it.
 
-            Return :class:`VPNSession`
-        """
-        from proton.sso import ProtonSSO
-        sso=ProtonSSO()
-        if username:
-            return sso.get_session(username, override_class=VPNSession)
-
-        return sso.get_default_session(override_class=VPNSession)
 
 
 class VPNCredentials:
