@@ -312,6 +312,12 @@ class VPNSession(Session):
 
     @staticmethod
     def get_session(username:str = None) -> "VPNSession":
+        """ Helper function to get a :class:`VPNSession` object for a specific user or the default
+            session if user is not given. The session might be already be authenticated as this helper
+            function relies on :class:`proton.sso.ProtonSSO` to retrieve it.
+
+            Return :class:`VPNSession`
+        """
         from proton.sso import ProtonSSO
         sso=ProtonSSO()
         if username:
