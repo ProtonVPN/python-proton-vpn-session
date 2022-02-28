@@ -196,14 +196,14 @@ class VPNCertCredentialsFetcher:
     """
     ROUTE='/vpn/v1/certificate'
 
-    def __init__(self, _raw_data: dict =None, _private_key=None, cert_duration: int = 10, features=None, session=None):
+    def __init__(self, _raw_data: dict =None, _private_key=None, cert_duration_in_minutes: int = 1440, features=None, session=None):
 
         if _private_key is not None:
             self._keys=KeyHandler(private_key=_private_key)
         else:
             # This will generate a new set key with a different fingerprint.
             self._keys=KeyHandler()
-        self._cert_duration = str(cert_duration) + " min"
+        self._cert_duration = str(cert_duration_in_minutes) + " min"
         self._session = session
         self._features = features
         self._raw_api_cert_data=_raw_data

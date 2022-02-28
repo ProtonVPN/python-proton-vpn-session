@@ -24,7 +24,7 @@ class VPNPubkeyCredentials:
         and its associated private key for authentication.
     """
 
-    MINIMUM_VALIDITY_PERIOD=300
+    MINIMUM_VALIDITY_PERIOD_IN_SECS=300
 
     def __init__(self):
         self._raw_vpn_cert_creds: Optional[VPNSecrets] = None
@@ -66,7 +66,7 @@ class VPNPubkeyCredentials:
         if self._certificate_obj is not None:
             if not self._certificate_obj.has_valid_date:
                 raise VPNCertificateExpiredError
-            if self._certificate_obj.validity_period > VPNPubkeyCredentials.MINIMUM_VALIDITY_PERIOD:
+            if self._certificate_obj.validity_period > VPNPubkeyCredentials.MINIMUM_VALIDITY_PERIOD_IN_SECS:
                 return self._certificate_obj.get_as_pem()
             else:
                 raise VPNCertificateNeedRefreshError
