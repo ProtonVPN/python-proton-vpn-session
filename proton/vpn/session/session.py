@@ -282,6 +282,15 @@ class VPNSession(Session):
             self.refresh()
         return auth
 
+    def logout(self) -> bool:
+        """ Logs out VPNSession, forgetting private key and certificate from memory (certificate will not be
+            usable anymore anyway after logout)
+        """
+        self._vpninfo = None
+        self._vpncertcredsfetcher = VPNCertCredentialsFetcher(session=self)
+        self._vpn_pubkey_credentials = VPNPubkeyCredentials()
+        return super().logout()
+
     def refresh(self) -> None:
         """ Refresh VPNSession info from the API. This assumes that the session is authenticated.
             if not authenticated, this will raise :exc:`proton.session.exceptions.ProtonAPIAuthenticationNeeded` to the user.
