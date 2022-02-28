@@ -1,7 +1,7 @@
-from .session import VPNAccount, VPNCredentials, VPNUserPassCredentials, VPNPubkeyCredentials, VPNCertificate, VPNSession # noqa
+from .session import VPNAccount, VPNCredentials, VPNUserPassCredentials, VPNPubkeyCredentials, VPNSession # noqa
 
 
 __all__ = [
     'VPNSession', 'VPNCredentials', 'VPNAccount',
-    'VPNCertificate', 'VPNUserPassCredentials', 'VPNPubkeyCredentials'
+    'VPNUserPassCredentials', 'VPNPubkeyCredentials'
 ]

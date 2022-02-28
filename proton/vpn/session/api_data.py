@@ -196,7 +196,7 @@ class VPNCertCredentialsFetcher:
     """
     ROUTE='/vpn/v1/certificate'
 
-    def __init__(self, _raw_data: dict =None, _private_key=None, cert_duration: int = 1440, features=None, session=None):
+    def __init__(self, _raw_data: dict =None, _private_key=None, cert_duration: int = 10, features=None, session=None):
 
         if _private_key is not None:
             self._keys=KeyHandler(private_key=_private_key)

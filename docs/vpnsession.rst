@@ -27,9 +27,24 @@ VPNCredentials
    :members:
 
 
+Proton API Data
+---------------
+
+.. autoclass:: proton.vpn.session.api_data.VPNCertificate
+   :members:
+   :undoc-members:
+
+.. autoclass:: proton.vpn.session.api_data.VPNSettings
+   :members:
+   :undoc-members:
+
+.. autoclass:: proton.vpn.session.api_data.VPNInfo
+   :members:
+   :undoc-members:
+
 Exceptions
 ----------
 
-.. automodule:: proton.vpn.session.exceptions
+.. autoclass:: proton.vpn.session.exceptions.VPNCertificateFingerprintError
    :members:
    :inherited-members:

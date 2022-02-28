@@ -1,11 +1,11 @@
-from .api_data import VPNSettings, VPNCertificate, VPNSecrets, APIVPNSession, VPNCertCredentials
+from .api_data import VPNSecrets, APIVPNSession, VPNCertCredentials
 from .api_data import VPNSettingsFetcher, VPNCertCredentialsFetcher
 from .certificates import Certificate
 from .key_mgr import KeyHandler
 import base64
 from dataclasses import dataclass, fields
 from proton.session import Session
-from typing import Sequence, Optional, NamedTuple, Union
+from typing import Sequence, Optional, NamedTuple
 from .exceptions import (VPNCertificateExpiredError,
                          VPNCertificateFingerprintError,
                          VPNCertificateNeedRefreshError,
@@ -23,6 +23,9 @@ class VPNPubkeyCredentials:
     """ Class responsible to hold vpn public key API RAW certificates and
         and its associated private key for authentication.
     """
+
+    MINIMUM_VALIDITY_PERIOD=300
+
     def __init__(self):
         self._raw_vpn_cert_creds: Optional[VPNSecrets] = None
         self._certificate_obj = None
@@ -63,7 +66,7 @@ class VPNPubkeyCredentials:
         if self._certificate_obj is not None:
             if not self._certificate_obj.has_valid_date:
                 raise VPNCertificateExpiredError
-            if self._certificate_obj.validity_period > 60:
+            if self._certificate_obj.validity_period > VPNPubkeyCredentials.MINIMUM_VALIDITY_PERIOD:
                 return self._certificate_obj.get_as_pem()
             else:
                 raise VPNCertificateNeedRefreshError
@@ -85,7 +88,7 @@ class VPNPubkeyCredentials:
         if self._certificate_obj is not None:
             if not self._certificate_obj.has_valid_date:
                 raise VPNCertificateExpiredError
-            if self._certificate_obj.validity_period > 60:
+            if self._certificate_obj.validity_period > VPNPubkeyCredentials.MINIMUM_VALIDITY_PERIOD:
                 return self._raw_vpn_cert_creds.secrets.wireguard_privatekey
             else:
                 raise VPNCertificateNeedRefreshError
@@ -212,10 +215,9 @@ class VPNSession(Session):
             - ProtonVPN X509 certificates signed by the API.
             - Wireguard private key.
 
-        - If the keyring does not contain such data or is expired, the user will be informed by receiving a exception when trying
-          to get them and the user will have to refresh the data.
-
+        - If the keyring does not contain such data or is expired, VPNSession will take care of refreshing it.
         - If the data is available through the keyring, it will be used as an off-line cache.
+        - If there is the need to, data can still manually refresh with the :meth:`refresh()` method.
 
         Simple example use :
 
@@ -227,13 +229,11 @@ class VPNSession(Session):
             sso=ProtonSSO()
             vpnsession=sso.get_session(username, override_class=VPNSession)
 
-            if not vpnsession.authenticated:
-                vpnsession.authenticate('USERNAME','PASSWORD')
-            try:
-                wireguard_private_key=vpnsession.vpn_credentials.pubkey_credentials.wg_private_key
-            except VPNCertificateNeedRefreshError:
-                vpnsession.refresh()
-                wireguard_private_key=vpnsession.vpn_credentials.pubkey_credentials.wg_private_key
+            vpnsession.authenticate('USERNAME','PASSWORD')
+
+            if vpnsession.authenticated:
+                wireguard_private_key=vpnsession.vpn_account.vpn_credentials.pubkey_credentials.wg_private_key
+                api_pem_certificate=vpn_account.vpn_credentials.pubkey_credentials.certificate_pem
 
     """
 
@@ -285,14 +285,20 @@ class VPNSession(Session):
     def refresh(self) -> None:
         """ Refresh VPNSession info from the API. This assumes that the session is authenticated.
             if not authenticated, this will raise :exc:`proton.session.exceptions.ProtonAPIAuthenticationNeeded` to the user.
+
+            :raises VPNCertificateFingerprintError: certificate and key fingerprint do not match, try to refresh again.
         """
         self._vpninfofetcher.fetch_vpninfo()
         self._vpncertcredsfetcher.fetch_certcreds()
         self._vpn_pubkey_credentials._refresh_and_check(self._vpncertcreds, strict=True)
 
     def _try_go_get_certificate_holder(self) -> Optional[VPNPubkeyCredentials]:
-        """ Return the object responsible to manage vpn client certificates and privates keys.
+        """ Return the object responsible to manage vpn client certificates and private keys.
         """
+        try:
+            pem_cert = self._vpn_pubkey_credentials.certificate_pem
+        except (VPNCertificateExpiredError, VPNCertificateNeedRefreshError, VPNCertificateNotAvailableError):
+            self.refresh()
         return self._vpn_pubkey_credentials
 
     def _try_go_get_username_and_password(self) -> Optional[VPNUserPassCredentials]:
@@ -304,7 +310,8 @@ class VPNSession(Session):
         if self._vpninfo is not None:
             return VPNUserPassCredentials(self._vpninfo.VPN.Name, self._vpninfo.VPN.Password)
         else:
-            return None
+            self.refresh()
+            return VPNUserPassCredentials(self._vpninfo.VPN.Name, self._vpninfo.VPN.Password)
 
     @property
     def vpn_account(self) -> VPNAccount:
@@ -319,15 +326,15 @@ class VPNSession(Session):
 
 class VPNCredentials:
     """ Interface to :class:`proton.vpn.connection.interfaces.VPNCredentials`
-        See :attr:`VPNSession.vpn_account.vpn_credentials` to get one.
+        See :attr:`proton.vpn.session.VPNSession.vpn_account.vpn_credentials` to get one.
     """
-    def __init__(self, vpnaccount: VPNSession):
-        self._vpnaccount = vpnaccount
+    def __init__(self, vpnsession: VPNSession):
+        self._vpnsession = vpnsession
 
     @property
     def pubkey_credentials(self) -> Optional[VPNPubkeyCredentials]:
-        return self._vpnaccount._try_go_get_certificate_holder()
+        return self._vpnsession._try_go_get_certificate_holder()
 
     @property
     def userpass_credentials(self) -> Optional[VPNUserPassCredentials]:
-        return self._vpnaccount._try_go_get_username_and_password()
+        return self._vpnsession._try_go_get_username_and_password()
