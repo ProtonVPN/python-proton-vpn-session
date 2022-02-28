@@ -152,7 +152,7 @@ class VPNPubkeyCredentials:
 
 class VPNAccount:
     """ This class is responsible to encapsulate all user vpn account information, including
-        credentials (private keys)
+        credentials (private keys, vpn user and password)
     """
 
     def __init__(self, vpnsession):

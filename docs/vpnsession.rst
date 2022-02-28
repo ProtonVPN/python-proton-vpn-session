@@ -7,15 +7,18 @@ VPNSession
    :special-members: __init__
 
 
+VPNAccount
+----------
+
+.. autoclass:: proton.vpn.session.VPNAccount
+   :members:
+
 VPNCredentials
 ---------------
 
 .. autoclass:: proton.vpn.session.VPNCredentials
    :members:
    :undoc-members:
-
-Credentials structure
-######################
 
 .. autoclass:: proton.vpn.session.VPNPubkeyCredentials
    :members:
