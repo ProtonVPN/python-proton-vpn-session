@@ -107,7 +107,7 @@ class TestVpnAccountFunction:
         sso=ProtonSSO()
         vpnsession=sso.get_session('tests', override_class=VPNSession)
         vpnsession.logout()
-        user_pass=vpnsession.vpn_credentials.userpass_credentials
+        user_pass=vpnsession.vpn_account.vpn_credentials.userpass_credentials
         assert(user_pass == None)
 
     def test_vpnsettings_with_keyring(self):
@@ -121,7 +121,7 @@ class TestVpnAccountFunction:
         vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
         vpnsession.__setstate__(vpndata)
 
-        vpnaccount=vpnsession.vpn_credentials.userpass_credentials
+        vpnaccount=vpnsession.vpn_account.vpn_credentials.userpass_credentials
         assert(vpnsession.vpn_account.max_tier==0)
         assert(vpnsession.vpn_account.max_connections==2)
         assert(vpnsession.vpn_account.delinquent is False)
@@ -132,13 +132,13 @@ class TestVpnAccountFunction:
     def test_vpncertificate_must_reload(self):
         sso=ProtonSSO()
         vpnsession=sso.get_session('tests', override_class=VPNSession)
-        assert(vpnsession.vpn_credentials.pubkey_credentials is not None)
+        assert(vpnsession.vpn_account.vpn_credentials.pubkey_credentials is not None)
         with pytest.raises(VPNCertificateNotAvailableError):
-            pem_cert=vpnsession.vpn_credentials.pubkey_credentials.certificate_pem()
+            pem_cert=vpnsession.vpn_account.vpn_credentials.pubkey_credentials.certificate_pem()
         with pytest.raises(VPNCertificateNotAvailableError):
-            wg_key=vpnsession.vpn_credentials.pubkey_credentials.wg_private_key()
+            wg_key=vpnsession.vpn_account.vpn_credentials.pubkey_credentials.wg_private_key()
         with pytest.raises(VPNCertificateNotAvailableError):
-            ovpn_priv_pem_key = vpnsession.vpn_credentials.pubkey_credentials.openvpn_private_key()
+            ovpn_priv_pem_key = vpnsession.vpn_account.vpn_credentials.pubkey_credentials.openvpn_private_key()
         vpnsession.logout()
 
     def test_vpncertificates_with_keyring(self):
@@ -170,7 +170,7 @@ class TestVpnAccountFunction:
         vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
         vpnsession.__setstate__(vpndata)
 
-        certificate=vpnsession.vpn_credentials.pubkey_credentials
+        certificate=vpnsession.vpn_account.vpn_credentials.pubkey_credentials
         assert(certificate.certificate_duration == 86401.0)
 
     def test_expired_certificate(self):
@@ -186,7 +186,7 @@ class TestVpnAccountFunction:
         vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
         vpnsession.__setstate__(vpndata)
 
-        certificate=vpnsession.vpn_credentials.pubkey_credentials
+        certificate=vpnsession.vpn_account.vpn_credentials.pubkey_credentials
 
         with pytest.raises(VPNCertificateExpiredError):
             pem_cert = certificate.certificate_pem()
