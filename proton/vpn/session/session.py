@@ -151,6 +151,9 @@ class VPNPubkeyCredentials:
 
 
 class VPNAccount:
+    """ This class is responsible to encapsulate all user vpn account information, including
+        credentials (private keys)
+    """
 
     def __init__(self, vpnsession):
         self.__vpnsession = vpnsession
@@ -192,6 +195,13 @@ class VPNAccount:
         """
         raise NotImplementedError
 
+    @property
+    def vpn_credentials(self) -> 'VPNCredentials':
+        """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
+            provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
+        """
+        return VPNCredentials(self.__vpnsession)
+
 
 class VPNSession(Session):
     """
@@ -212,8 +222,11 @@ class VPNSession(Session):
         .. code-block::
 
             from proton.vpn.session import VPNSession
+            from proton.sso import ProtonSSO
 
-            vpnsession=VPNSession.get_session()
+            sso=ProtonSSO()
+            vpnsession=sso.get_session(username, override_class=VPNSession)
+
             if not vpnsession.authenticated:
                 vpnsession.authenticate('USERNAME','PASSWORD')
             try:
@@ -248,22 +261,6 @@ class VPNSession(Session):
         if self._vpninfo and self._vpncertcreds and d != {}:
             d['vpn'] = {'vpninfo' : self._vpninfo.to_dict(), 'certcreds' : self._vpncertcreds.to_dict()}
         return d
-
-    @staticmethod
-    def get_session(username:str = None) -> "VPNSession":
-        """ Helper function to get a :class:`VPNSession` object for a specific user or the default
-            session if user is not given. The session might be already be authenticated as this helper
-            function relies on :class:`proton.sso.ProtonSSO` to retrieve it.
-
-            Return :class:`VPNSession`
-        """
-        from proton.sso import ProtonSSO
-        sso=ProtonSSO()
-        if username:
-            return sso.get_session(username, override_class=VPNSession)
-
-        return sso.get_default_session(override_class=VPNSession)
-
 
     def authenticate(self, *args) -> bool:
         """Authenticate VPNSession. If the authentication is successfull, it will refresh as well :
@@ -310,14 +307,10 @@ class VPNSession(Session):
             return None
 
     @property
-    def vpn_credentials(self) -> 'VPNCredentials':
-        """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
-            provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
+    def vpn_account(self) -> VPNAccount:
         """
-        return VPNCredentials(self)
-
-    @property
-    def vpn_account(self):
+        :return: :class:`VPNAccount` that includes all information related to a vpn user account.
+        """
         return VPNAccount(self)
 
 
