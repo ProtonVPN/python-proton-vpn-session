@@ -88,7 +88,7 @@ class VPNPubkeyCredentials:
         if self._certificate_obj is not None:
             if not self._certificate_obj.has_valid_date:
                 raise VPNCertificateExpiredError
-            if self._certificate_obj.validity_period > VPNPubkeyCredentials.MINIMUM_VALIDITY_PERIOD:
+            if self._certificate_obj.validity_period > VPNPubkeyCredentials.MINIMUM_VALIDITY_PERIOD_IN_SECS:
                 return self._raw_vpn_cert_creds.secrets.wireguard_privatekey
             else:
                 raise VPNCertificateNeedRefreshError
