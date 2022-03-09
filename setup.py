@@ -3,12 +3,12 @@
 from setuptools import setup, find_namespace_packages
 
 setup(
-    name="protonvpn-session",
-    version="0.0.0",
-    description="ProtonVPN Credentials wrapper",
+    name="proton-vpn-session",
+    version="0.0.1",
+    description="ProtonVPN Session wrapper",
     author="Proton Technologies",
     author_email="contact@protonmail.com",
-    url="https://github.com/ProtonMail/python-proton-core",
+    url="https://github.com/ProtonMail/python-protonvpn-session",
     install_requires=["requests", "bcrypt", "python-gnupg", "pyopenssl", "importlib-metadata; python_version < '3.8'"],
     tests_requires=['pyotp'],
     packages=find_namespace_packages(include=['proton.*']),
