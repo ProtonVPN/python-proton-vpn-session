@@ -6,3 +6,6 @@ export PYBUILD_NAME=protonvpn_session
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_test:
+	dh_auto_test -- --test-pytest
