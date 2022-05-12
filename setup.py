@@ -25,7 +25,7 @@ setup(
     author="Proton Technologies",
     author_email="contact@protonmail.com",
     url="https://github.com/ProtonMail/python-protonvpn-session",
-    install_requires=["requests", "bcrypt", "python-gnupg", "pyopenssl", "importlib-metadata; python_version < '3.8'"],
+    install_requires=["requests", "bcrypt", "python-gnupg", "pyopenssl", "importlib-metadata; python_version < '3.8'","PyNaCl"],
     tests_requires=['pyotp'],
     packages=find_namespace_packages(include=['proton.*']),
     include_package_data=True,
