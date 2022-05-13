@@ -20,7 +20,7 @@ def format_version():
 
 setup(
     name=pkg_name,
-    version=format_version(),
+    version="0.0.1",
     description="ProtonVPN Session wrapper",
     author="Proton Technologies",
     author_email="contact@protonmail.com",
