@@ -3,7 +3,6 @@ from .api_data import VPNSettingsFetcher, VPNCertCredentialsFetcher
 from .certificates import Certificate
 from .key_mgr import KeyHandler
 import base64
-from dataclasses import dataclass, fields
 from proton.session import Session
 from typing import Sequence, Optional, NamedTuple
 from .exceptions import (VPNCertificateExpiredError,

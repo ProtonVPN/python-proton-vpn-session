@@ -11,3 +11,5 @@ cov.xml
 html
 .coverage
 htmlcov/
+.idea
+venv
