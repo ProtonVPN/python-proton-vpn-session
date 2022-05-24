@@ -261,26 +261,6 @@ class VPNSession(Session):
             d['vpn'] = {'vpninfo' : self._vpninfo.to_dict(), 'certcreds' : self._vpncertcreds.to_dict()}
         return d
 
-    def authenticate(self, *args) -> bool:
-        """Authenticate VPNSession. If the authentication is successfull, it will refresh as well :
-
-            - VPN info
-            - VPN Certificate and private key.
-
-            :param username: Proton account username
-            :type username: str
-            :param password: Proton account password
-            :type password: str
-            :param no_condition_check: Internal flag to disable locking, defaults to False
-            :type no_condition_check: bool, optional
-            :return: True if authentication succeeded, False otherwise.
-            :rtype: bool
-        """
-        auth = super().authenticate(*args)
-        if auth:
-            self.refresh()
-        return auth
-
     def logout(self) -> bool:
         """ Logs out VPNSession, forgetting private key and certificate from memory (certificate will not be
             usable anymore anyway after logout)
