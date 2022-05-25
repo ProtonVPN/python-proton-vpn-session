@@ -1,3 +1,9 @@
+protonvpn-session (0.0.2~next-mickael) UNRELEASED; urgency=medium
+
+  * Fix and simplify 2FA logic : authenticate is not needed
+
+ -- Mickaël Hoerdt <opensource@proton.me>  Wed, 25 May 2022 16:00:37 +0100
+
 protonvpn-session (0.0.1~next-mickael) UNRELEASED; urgency=medium
 
   * First release
