@@ -13,8 +13,8 @@ include:
    file: 'gitlab-ci-integration-tests-debian.yml'
 
 stages:
-  - unit-tests-debian
+  - unit-tests
   - publish-pypi
-  - build-debian
-  - publish-debian
+  - build
+  - publish
   - integration-tests
