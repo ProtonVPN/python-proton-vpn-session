@@ -1,17 +1,21 @@
-from curses import raw
-import pytest
-import json
 import base64
-from proton.sso import ProtonSSO
+import json
+from curses import raw
+
+import pytest
 from proton.session.exceptions import ProtonAPIAuthenticationNeeded
-from proton.vpn.session.exceptions import VPNCertificateNotAvailableError, VPNCertificateExpiredError, VPNCertificateFingerprintError
+from proton.sso import ProtonSSO
 from proton.vpn.session import VPNSession
-from proton.vpn.session.api_data import VPNSettings, VPNSettingsFetcher
-from proton.vpn.session.api_data import VPNCertificate, VPNCertCredentials, VPNCertCredentialsFetcher
-from proton.vpn.session.api_data import VPNSessions
-from proton.vpn.session.api_data import VPNSecrets
-from proton.vpn.session.key_mgr import KeyHandler
+from proton.vpn.session.api_fetchers import (VPNCertCredentials,
+                                         VPNCertCredentialsFetcher,
+                                         VPNCertificate, VPNSecrets,
+                                         VPNSessions, VPNSettings,
+                                         VPNSettingsFetcher)
 from proton.vpn.session.certificates import Certificate
+from proton.vpn.session.exceptions import (VPNCertificateExpiredError,
+                                           VPNCertificateFingerprintError,
+                                           VPNCertificateNotAvailableError)
+from proton.vpn.session.key_mgr import KeyHandler
 
 
 class TestVpnAccountSerialize:
