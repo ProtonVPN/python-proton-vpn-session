@@ -2,10 +2,5 @@
 
 #export DH_VERBOSE=1
 
-export PYBUILD_NAME=protonvpn_session
-
 %:
 	dh $@ --with python3 --buildsystem=pybuild
-
-override_dh_auto_test:
-	proxychains python3 -m pytest
