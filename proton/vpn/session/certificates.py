@@ -244,7 +244,7 @@ class Certificate:
     @property
     def has_valid_date(self) -> bool:
         return self.validity_period >= 0
-        
+
     @property
     def validity_period(self) -> float:
         """ remaining time the certificate is valid, in seconds. < 0 : certificate is not valid anymore """

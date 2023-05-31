@@ -16,9 +16,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass, fields, asdict
 import json
 from typing import List
+
+
+# pylint: disable=invalid-name
 
 
 @dataclass
@@ -67,6 +72,9 @@ class VPNInfo(Serializable):
     """ List of groups that this account belongs to """
     NeedConnectionAllocation: bool
 
+    def _deserialize(dict_data: dict) -> VPNInfo:
+        return VPNInfo(**dict_data)
+
 
 @dataclass
 class VPNSettings(Serializable):
@@ -82,9 +90,12 @@ class VPNSettings(Serializable):
     Warnings: List[str]
 
     @staticmethod
-    def _deserialize(dict_data: dict) -> 'VPNSettings':
+    def _deserialize(dict_data: dict) -> VPNSettings:
         __vpn_settings_fields = [v.name for v in fields(VPNSettings) if v.name != 'VPN']
-        return VPNSettings(VPNInfo(**dict_data['VPN']), **{name: dict_data[name] for name in __vpn_settings_fields})
+        return VPNSettings(
+            VPNInfo.from_dict(dict_data['VPN']),
+            **{name: dict_data[name] for name in __vpn_settings_fields}
+        )
 
 
 @dataclass
@@ -104,30 +115,9 @@ class VPNCertificate(Serializable):
     ServerPublicKey: str
 
     @staticmethod
-    def _deserialize(dict_data: dict) -> 'VPNCertificate':
+    def _deserialize(dict_data: dict) -> VPNCertificate:
         __fields = [v.name for v in fields(VPNCertificate)]
         return VPNCertificate(**{name: dict_data[name] for name in __fields})
-
-
-@dataclass
-class VPNSecrets(Serializable):
-    """ Asymmetric crypto secrets generated locally by the client to :
-
-        - connect to the VPN service
-        - ask for a certificate to the API with the corresponding public key.
-
-    """
-    wireguard_privatekey: str
-    """Wireguard private key encoded in base64. To be added locally by the user. The API route is not providing it"""
-    openvpn_privatekey: str
-    """OpenVPN private key in PEM format. To be added locally by the user. The API is not providing it"""
-    ed25519_privatekey: str
-    """Private key in ed25519 base64 format. used to check fingerprints"""
-
-    @staticmethod
-    def _deserialize(dict_data: dict) -> 'VPNSecrets':
-        __fields = [v.name for v in fields(VPNSecrets)]
-        return VPNSecrets(**{name: dict_data[name] for name in __fields})
 
 
 @dataclass
@@ -137,7 +127,7 @@ class APIVPNSession(Serializable):
     Protocol: str
 
     @staticmethod
-    def _deserialize(dict_data: dict) -> 'APIVPNSession':
+    def _deserialize(dict_data: dict) -> APIVPNSession:
         __fields = [v.name for v in fields(APIVPNSession)]
         return APIVPNSession(**{name: dict_data[name] for name in __fields})
 
@@ -151,25 +141,30 @@ class VPNSessions(Serializable):
         return len(self.Sessions)
 
     @staticmethod
-    def _deserialize(dict_data: dict) -> 'VPNSessions':
+    def _deserialize(dict_data: dict) -> VPNSessions:
         session_list = [APIVPNSession.from_dict(value) for value in dict_data['Sessions']]
         return VPNSessions(Sessions=session_list)
 
 
 @dataclass
-class VPNCertCredentials(Serializable):
-    """
-        A Tuple object containing API certificate and user secrets
-    """
-    api_certificate: VPNCertificate
-    secrets: VPNSecrets
+class VPNLocation(Serializable):
+    """Data about the physical location the VPN client runs from."""
+    IP: str
+    Lat: float
+    Long: float
+    Country: str
+    ISP: str
 
     @staticmethod
-    def from_dict(cert_raw_data: dict, secrets_raw_data: dict) -> 'VPNCertCredentials':
-        """ Helper function ton build a VPNCertCredential object from raw data
-            :return: a :class:`VPNCertCredentials` object
+    def _deserialize(dict_data: dict) -> VPNLocation:
         """
-        return VPNCertCredentials(
-            VPNCertificate.from_dict(cert_raw_data),
-            VPNSecrets.from_dict(secrets_raw_data)
+        Builds a Location object from a dict containing the parsed
+        JSON response returned by the API.
+        """
+        return VPNLocation(
+            IP=dict_data["IP"],
+            Lat=dict_data["Lat"],
+            Long=dict_data["Long"],
+            Country=dict_data["Country"],
+            ISP=dict_data["ISP"]
         )

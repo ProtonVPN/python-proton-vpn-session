@@ -16,8 +16,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Optional, Sequence
-from proton.vpn.session.credentials import VPNCredentials
+from __future__ import annotations
+
+from typing import Sequence, TYPE_CHECKING
+
+from proton.vpn.session.credentials import VPNCredentials, VPNUserPassCredentials, VPNPubkeyCredentials, VPNSecrets
+from proton.vpn.session.dataclasses import VPNSettings, VPNLocation, VPNCertificate
+from proton.vpn.session.exceptions import VPNCertificateError
+
+if TYPE_CHECKING:
+    from proton.vpn.session.dataclasses import APIVPNSession
 
 
 class VPNAccount:
@@ -25,38 +33,53 @@ class VPNAccount:
         credentials (private keys, vpn user and password)
     """
 
-    def __init__(self, vpnsession):
-        self.__vpnsession = vpnsession
+    def __init__(self, vpninfo: VPNSettings, certificate: VPNCertificate, secrets: VPNSecrets, location: VPNLocation):
+        self._vpninfo = vpninfo
+        self._certificate = certificate
+        self._secrets = secrets
+        self._location = location
+
+    @staticmethod
+    def from_dict(dict_data: dict) -> VPNAccount:
+        try:
+            return VPNAccount(
+                vpninfo=VPNSettings.from_dict(dict_data['vpninfo']),
+                certificate=VPNCertificate.from_dict(dict_data['certificate']),
+                secrets=VPNSecrets.from_dict(dict_data['secrets']),
+                location=VPNLocation.from_dict(dict_data['location'])
+            )
+        except Exception as exc:
+            raise VPNCertificateError("Invalid VPN account") from exc
+
+    def to_dict(self) -> dict:
+        # Note that self._credentials is not persisted since it's derived from the other fields
+        return {
+            "vpninfo": self._vpninfo.to_dict(),
+            "certificate": self._certificate.to_dict(),
+            "secrets": self._secrets.to_dict(),
+            "location": self._location.to_dict()
+        }
 
     @property
-    def max_tier(self) -> Optional[int]:
+    def max_tier(self) -> int:
         """
         :return: int `Maxtier` value of the acccount from :class:`api_data.VPNInfo`
         """
-        if self.__vpnsession._vpninfo is not None:
-            return self.__vpnsession._vpninfo.VPN.MaxTier
-        else:
-            return None
+        return self._vpninfo.VPN.MaxTier
 
     @property
-    def max_connections(self) -> Optional[int]:
+    def max_connections(self) -> int:
         """
         :return: int the `MaxConnect` value of the acccount from :class:`api_data.VPNInfo`
         """
-        if self.__vpnsession._vpninfo is not None:
-            return self.__vpnsession._vpninfo.VPN.MaxConnect
-        else:
-            return None
+        return self._vpninfo.VPN.MaxConnect
 
     @property
-    def delinquent(self) -> Optional[bool]:
+    def delinquent(self) -> bool:
         """
         :return: bool if the account is deliquent, based the value from :class:`api_data.VPNSettings`
         """
-        if self.__vpnsession._vpninfo is not None:
-            return True if self.__vpnsession._vpninfo.Delinquent > 2 else False
-        else:
-            return None
+        return True if self._vpninfo.Delinquent > 2 else False
 
     @property
     def active_connections(self) -> Sequence["APIVPNSession"]:
@@ -70,4 +93,21 @@ class VPNAccount:
         """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
             provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
         """
-        return VPNCredentials(self.__vpnsession)
+        return VPNCredentials(
+            userpass_credentials=VPNUserPassCredentials(
+                username=self._vpninfo.VPN.Name,
+                password=self._vpninfo.VPN.Password
+            ),
+            pubkey_credentials=VPNPubkeyCredentials(
+                api_certificate=self._certificate,
+                secrets=self._secrets,
+                strict=True
+            )
+        )
+
+    @property
+    def location(self) -> VPNLocation:
+        """
+        returns: the physical location the VPN client runs from.
+        """
+        return self._location

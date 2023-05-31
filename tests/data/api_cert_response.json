@@ -1,4 +1,5 @@
 {
+  "Code": 1000,
   "SerialNumber": "154197323",
   "ClientKeyFingerprint": "a3CzIFFDKF5w4CtPDaz8mWZWzljRb+SqGTkvktCqznMhUemScDonoinYDz8ncOfQw7WI0Ek5aombSVSITnQDTw==",
   "ClientKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAoqBxaQgj21lzBd9YG0iotoSoHLXQDYS2LdDtiE6Jtk=\n-----END PUBLIC KEY-----",

@@ -1,6 +1,5 @@
 {
     "Code": 1000,
-    
     "VPN": {
         "ExpirationTime": 1,
         "Name": "test",
@@ -16,7 +15,6 @@
         ],
         "NeedConnectionAllocation": false
     },
-    
     "Services": 5,
     "Subscribed": 0,
     "Delinquent": 0,

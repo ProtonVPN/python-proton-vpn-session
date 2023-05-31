@@ -117,7 +117,3 @@ class KeyHandler:
 
 def bytes_to_str_hexa(b: bytes):
     return ":".join(["{:02x}".format(x) for x in b])
-
-if __name__=="__main__":
-    a=KeyHandler()
-    print(a.ed25519_pk_pem)

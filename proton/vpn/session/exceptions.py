@@ -18,22 +18,28 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
-class VPNCertificateNotAvailableError(Exception):
-    """ VPN Certificate data not available and should be reloaded by calling  :meth:`VPNSession.refresh`
+class VPNCertificateError(Exception):
+    """
+    There is something wrong with the VPN certificate.
     """
 
 
-class VPNCertificateExpiredError(Exception):
-    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNSession.refresh`
+class VPNCertificateExpiredError(VPNCertificateError):
+    """
+    VPN Certificate is available but is expired.
     """
 
 
-class VPNCertificateNeedRefreshError(Exception):
-    """ VPN Certificate is available but is expired, it should be refreshed with :meth:`VPNSession.refresh`
+class VPNCertificateNeedRefreshError(VPNCertificateError):
+    """
+    VPN Certificate is available but needs to be refreshed because
+    is close to expiration.
     """
 
 
-class VPNCertificateFingerprintError(Exception):
-    """ VPN Certificate and private key fingerprint are not matching, regenerate a key and get a new a certificate with
-        the corresponding public key.
+class VPNCertificateFingerprintError(VPNCertificateError):
+    """
+    VPN Certificate and private key fingerprint are not matching.
+    A new keypair should be generated and the corresponding certificate
+    should be fetched from our REST API.
     """

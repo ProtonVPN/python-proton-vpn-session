@@ -4,14 +4,14 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name="proton-vpn-session",
-    version="0.1.0",
+    version="0.2.0",
     description="ProtonVPN Session wrapper",
     author="Proton Technologies",
     author_email="contact@protonmail.com",
     url="https://github.com/ProtonMail/python-protonvpn-session",
-    install_requires=["proton-core", "cryptography", "PyNaCl"],
+    install_requires=["proton-core", "proton-vpn-logger", "cryptography", "PyNaCl"],
     extras_require={
-        "development": ["pytest", "pytest-coverage"]
+        "development": ["pytest", "pytest-coverage", "flake8", "pylint"]
     },
     packages=find_namespace_packages(include=['proton.*']),
     include_package_data=True,

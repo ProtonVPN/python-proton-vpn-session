@@ -16,201 +16,154 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
-import base64
 import json
-from curses import raw
+import pathlib
 
 import pytest
-from proton.session.exceptions import ProtonAPIAuthenticationNeeded
-from proton.sso import ProtonSSO
-from proton.vpn.session import VPNSession
-from proton.vpn.session.api_fetchers import (VPNCertCredentials,
-                                         VPNCertCredentialsFetcher,
-                                         VPNCertificate, VPNSecrets,
-                                         VPNSessions, VPNSettings,
-                                         VPNSettingsFetcher)
+from proton.vpn.session import VPNSession, VPNPubkeyCredentials
+from proton.vpn.session.api_fetchers import (
+    VPNCertificate, VPNSessions, VPNSettings
+)
+from proton.vpn.session.credentials import VPNSecrets
+from proton.vpn.session.dataclasses import VPNLocation
 from proton.vpn.session.certificates import Certificate
-from proton.vpn.session.exceptions import (VPNCertificateExpiredError,
-                                           VPNCertificateFingerprintError,
-                                           VPNCertificateNotAvailableError)
-from proton.vpn.session.key_mgr import KeyHandler
+from proton.vpn.session.exceptions import (
+    VPNCertificateExpiredError, VPNCertificateFingerprintError,
+    VPNCertificateError
+)
+
+DATA_DIR = pathlib.Path(__file__).parent.absolute() / 'data'
+with open(DATA_DIR / 'api_cert_response.json', 'r') as f:
+    VPN_CERTIFICATE_API_RESPONSE = json.load(f)
+    del VPN_CERTIFICATE_API_RESPONSE["Code"]
+with open(DATA_DIR / 'api_vpnsettings_response.json', 'r') as f:
+    VPN_API_RESPONSE = json.load(f)
+    del VPN_API_RESPONSE["Code"]
+with open(DATA_DIR / 'api_vpnsessions_response.json', 'r') as f:
+    VPN_SESSIONS_API_RESPONSE = json.load(f)
+    del VPN_SESSIONS_API_RESPONSE["Code"]
+with open(DATA_DIR / 'api_vpn_location_response.json', 'r') as f:
+    VPN_LOCATION_API_RESPONSE = json.load(f)
+    del VPN_LOCATION_API_RESPONSE["Code"]
+with open(DATA_DIR / 'vpn_secrets.json', 'r') as f:
+    VPN_SECRETS_DICT = json.load(f)
 
 
 class TestVpnAccountSerialize:
-    @classmethod
-    def setup_class(cls):
-        with open('tests/data/api_cert_response.json','r') as f:
-            cls.VPN_CLIENT_CERT_RAW_DATA=f.read()
-            cls.api_certificate=json.loads(cls.VPN_CLIENT_CERT_RAW_DATA)
-        with open('tests/data/api_vpnsettings_response.json','r') as f:
-            cls.VPN_API_RAW_DATA=f.read()
-        with open('tests/data/api_vpnsessions_response.json','r') as f:
-            cls.VPN_SESSIONS_FROM_API_RAW_DATA=f.read()
-        with open('tests/data/vpn_secrets.json','r') as f:
-            cls.VPN_CLIENT_SECRET_RAW_DATA=f.read()
-            cls.secrets=json.loads(cls.VPN_CLIENT_SECRET_RAW_DATA)
-            #print(cls.secrets)
 
     def test_fingerprints(self):
         # Check if our fingerprints are matching for secrets, API and Certificate
         # Get fingerprint from the secrets. Wireguard private key from the API is in ED25519 FORMAT ?
-        ovpn_priv_key = TestVpnAccountSerialize.secrets["openvpn_privatekey"]
-        with open('/tmp/ovpn_privkey.pem','w') as f:
-            f.write(ovpn_priv_key)
-        keyhandler=KeyHandler.from_sk_file('/tmp/ovpn_privkey.pem')
+        private_key = VPN_SECRETS_DICT["ed25519_privatekey"]
+        vpn_secrets = VPNSecrets(private_key)
 
-        fingerprint_from_secrets=keyhandler.get_proton_fingerprint_from_x25519_pk(keyhandler.x25519_pk_bytes)
+        fingerprint_from_secrets = vpn_secrets.proton_fingerprint_from_x25519_pk
         # Get fingerprint from API
-        fingerprint_from_api = TestVpnAccountSerialize.api_certificate["ClientKeyFingerprint"]
+        fingerprint_from_api = VPN_CERTIFICATE_API_RESPONSE["ClientKeyFingerprint"]
         # Get fingerprint from Certificate
-        certificate = Certificate(cert_pem=TestVpnAccountSerialize.api_certificate["Certificate"])
-        fingerprint_from_certificate=certificate.proton_fingerprint
-        assert(fingerprint_from_api==fingerprint_from_certificate)
-        #==fingerprint_from_secrets)
+        certificate = Certificate(cert_pem=VPN_CERTIFICATE_API_RESPONSE["Certificate"])
+        fingerprint_from_certificate = certificate.proton_fingerprint
+        assert fingerprint_from_api == fingerprint_from_certificate
+        assert fingerprint_from_secrets == fingerprint_from_certificate
 
-    def test_vpnaccount_data_unserialize(self):
-        vpnaccount = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
-        assert(vpnaccount.VPN.Name=="test")
-        assert(vpnaccount.VPN.Password=="passwordtest")
+    def test_vpnaccount_from_dict(self):
+        vpnaccount = VPNSettings.from_dict(VPN_API_RESPONSE)
+        assert vpnaccount.VPN.Name == "test"
+        assert vpnaccount.VPN.Password == "passwordtest"
     
-    def test_vpnaccount_data_serialize(self):
-        vpnaccount = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
-        json.loads(vpnaccount.to_json())
+    def test_vpnaccount_to_dict(self):
+        assert VPNSettings.from_dict(VPN_API_RESPONSE).to_dict() == VPN_API_RESPONSE
 
-    def test_vpnsettings_fetcher(self):
-        vpnaccount=VPNSettingsFetcher(json.loads(TestVpnAccountSerialize.VPN_API_RAW_DATA)).fetch()
-        assert(vpnaccount.VPN.Name=="test")
-        assert(vpnaccount.VPN.Password=="passwordtest")
+    def test_vpncertificate_from_dict(self):
+        cert = VPNCertificate.from_dict(VPN_CERTIFICATE_API_RESPONSE)
+        assert cert.SerialNumber == VPN_CERTIFICATE_API_RESPONSE["SerialNumber"]
+        assert cert.ClientKeyFingerprint == VPN_CERTIFICATE_API_RESPONSE["ClientKeyFingerprint"]
+        assert cert.ClientKey == VPN_CERTIFICATE_API_RESPONSE["ClientKey"]
+        assert cert.Certificate == VPN_CERTIFICATE_API_RESPONSE["Certificate"]
+        assert cert.ExpirationTime == VPN_CERTIFICATE_API_RESPONSE["ExpirationTime"]
+        assert cert.RefreshTime == VPN_CERTIFICATE_API_RESPONSE["RefreshTime"]
+        assert cert.Mode == VPN_CERTIFICATE_API_RESPONSE["Mode"]
+        assert cert.DeviceName == VPN_CERTIFICATE_API_RESPONSE["DeviceName"]
+        assert cert.ServerPublicKeyMode == VPN_CERTIFICATE_API_RESPONSE["ServerPublicKeyMode"]
+        assert cert.ServerPublicKey == VPN_CERTIFICATE_API_RESPONSE["ServerPublicKey"]
 
+    def test_vpncertificate_to_dict(self):
+        assert VPNCertificate.from_dict(VPN_CERTIFICATE_API_RESPONSE).to_dict() == VPN_CERTIFICATE_API_RESPONSE
 
-    def test_cert_unserialize(self):
-        cert=VPNCertificate.from_json(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
-        assert(cert.SerialNumber=="154197323")
-        assert(cert.ClientKeyFingerprint=="a3CzIFFDKF5w4CtPDaz8mWZWzljRb+SqGTkvktCqznMhUemScDonoinYDz8ncOfQw7WI0Ek5aombSVSITnQDTw==")
-        assert(cert.ClientKey=="-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAoqBxaQgj21lzBd9YG0iotoSoHLXQDYS2LdDtiE6Jtk=\n-----END PUBLIC KEY-----")
-        assert(cert.Certificate=="-----BEGIN CERTIFICATE-----\nMIICJjCCAdigAwIBAgIECTDdSzAFBgMrZXAwMTEvMC0GA1UEAwwmUHJvdG9uVlBO\nIENsaWVudCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkwHhcNMjIwMTIwMjAyOTIxWhcN\nMjIwMTIxMjAyOTIyWjAUMRIwEAYDVQQDDAkxNTQxOTczMjMwKjAFBgMrZXADIQAC\nioHFpCCPbWXMF31gbSKi2hKgctdANhLYt0O2ITom2aOCAS0wggEpMB0GA1UdDgQW\nBBS/pHNS2Vf2irz16Cu8uw07PZHJ9zATBgwrBgEEAYO7aQEAAAAEAwIBADATBgwr\nBgEEAYO7aQEAAAEEAwIBATBQBgwrBgEEAYO7aQEAAAIEQDA+BAh2cG5iYXNpYwQY\ndnBuLWF1dGhvcml6ZWQtZm9yLWNoLTMyBBh2cG4tYXV0aG9yaXplZC1mb3ItY2gt\nMzMwDgYDVR0PAQH/BAQDAgeAMAwGA1UdEwEB/wQCMAAwEwYDVR0lBAwwCgYIKwYB\nBQUHAwIwWQYDVR0jBFIwUIAUs+HMEJai+CKly9zPRAZGLOuSzgWhNaQzMDExLzAt\nBgNVBAMMJlByb3RvblZQTiBDbGllbnQgQ2VydGlmaWNhdGUgQXV0aG9yaXR5ggEB\nMAUGAytlcANBAKK+E6d7Rxn7X1u4s4AtJuD3kj6UjBEC3cFr3+A+tiV/THc19Qkr\n666A5Ass0n2LsjENVnAJ9VQ6x5lg7011sQk=\n-----END CERTIFICATE-----\n")
-        assert(cert.ExpirationTime==1642796962)
-        assert(cert.RefreshTime==1642775362)
-        assert(cert.Mode=="session")
-        assert(cert.DeviceName=="")
-        assert(cert.ServerPublicKeyMode=="EC")
-        assert(cert.ServerPublicKey=="-----BEGIN PUBLIC KEY-----\n\
-MCowBQYDK2VwAyEANm3aIvkeaMO9ctcIeEfM4K1ME3bU9feum5sWQ3Sdx+o=\n\
------END PUBLIC KEY-----\n")
+    def test_secrets_from_dict(self):
+        secrets = VPNSecrets.from_dict(VPN_SECRETS_DICT)
+        assert secrets.ed25519_privatekey == "rNW3dL5A3dUrQX3ZKbVAFLjSFJdvDU5JzjrRrnI+cos="
 
-    def test_cert_serialize(self):
-        cert=VPNCertificate.from_json(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
-        json.loads(cert.to_json())
+    def test_secrets_to_dict(self):
+        assert VPNSecrets.from_dict(VPN_SECRETS_DICT).to_dict() == VPN_SECRETS_DICT
 
-    def test_secrets_unserialize(self):
-        secrets=VPNSecrets.from_json(TestVpnAccountSerialize.VPN_CLIENT_SECRET_RAW_DATA)
-        assert(secrets.wireguard_privatekey=="GIbDx5QIf9aqrbIjI5jgNEQ6O7oqCse7mqkmM7Mrk3g=")
-        assert(secrets.openvpn_privatekey=="-----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIKzVt3S+QN3VK0F92Sm1QBS40hSXbw1OSc460a5yPnKL\n-----END PRIVATE KEY-----\n")
-        assert(secrets.ed25519_privatekey=="rNW3dL5A3dUrQX3ZKbVAFLjSFJdvDU5JzjrRrnI+cos=")
-
-    def test_secrets_serialize(self):
-        secrets=VPNSecrets.from_json(TestVpnAccountSerialize.VPN_CLIENT_SECRET_RAW_DATA)
-        json.loads(secrets.to_json())
-
-    def test_cert_credentials_builder(self):
-        cert=json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
-        secrets=json.loads(TestVpnAccountSerialize.VPN_CLIENT_SECRET_RAW_DATA)
-        cert_cred=VPNCertCredentials.from_dict(cert, secrets)
-
-    def test_sessions_unserialize(self):
-        sessions=VPNSessions.from_json(TestVpnAccountSerialize.VPN_SESSIONS_FROM_API_RAW_DATA)
+    def test_sessions_from_dict(self):
+        sessions = VPNSessions.from_dict(VPN_SESSIONS_API_RESPONSE)
         assert(len(sessions.Sessions)==2)
         assert(sessions.Sessions[0].ExitIP=='1.2.3.4')
         assert(sessions.Sessions[1].ExitIP=='5.6.7.8')
 
+    def test_location_from_dict(self):
+        location = VPNLocation.from_dict(VPN_LOCATION_API_RESPONSE)
+        assert location.IP == VPN_LOCATION_API_RESPONSE["IP"]
+        assert location.Lat == VPN_LOCATION_API_RESPONSE["Lat"]
+        assert location.Long == VPN_LOCATION_API_RESPONSE["Long"]
+        assert location.Country == VPN_LOCATION_API_RESPONSE["Country"]
+        assert location.ISP == VPN_LOCATION_API_RESPONSE["ISP"]
 
-class TestVpnAccountFunction:
+    def test_location_to_dict(self):
+        assert VPNLocation.from_dict(VPN_LOCATION_API_RESPONSE).to_dict() == VPN_LOCATION_API_RESPONSE
 
-    def test_vpnsettings_must_reload(self):
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        vpnsession.logout()
 
-        with pytest.raises(ProtonAPIAuthenticationNeeded):
-            user_pass=vpnsession.vpn_account.vpn_credentials.userpass_credentials
-            assert(user_pass == None)
-
-    def test_vpnsettings_with_keyring(self):
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
-        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
-        ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
-        kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
-        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch()
-        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
+class TestVpnAccount:
+    def test_vpn_session___setstate__(self):
+        vpnsession = VPNSession()
+        vpndata={
+            'vpn' : {
+                'vpninfo': VPN_API_RESPONSE,
+                'certificate': VPN_CERTIFICATE_API_RESPONSE,
+                'location': VPN_LOCATION_API_RESPONSE,
+                'secrets': VPN_SECRETS_DICT
+            }
+        }
         vpnsession.__setstate__(vpndata)
 
-        vpnaccount=vpnsession.vpn_account.vpn_credentials.userpass_credentials
-        assert(vpnsession.vpn_account.max_tier==0)
-        assert(vpnsession.vpn_account.max_connections==2)
-        assert(vpnsession.vpn_account.delinquent is False)
-        assert(vpnaccount.username=="test")
-        assert(vpnaccount.password=="passwordtest")
-        vpnsession.logout()
-    
-    def test_vpncertificate_must_reload(self):
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        assert(vpnsession._vpn_pubkey_credentials is not None)
-        with pytest.raises(VPNCertificateNotAvailableError):
-            pem_cert=vpnsession._vpn_pubkey_credentials.certificate_pem()
-        with pytest.raises(VPNCertificateNotAvailableError):
-            wg_key=vpnsession._vpn_pubkey_credentials.wg_private_key()
-        with pytest.raises(VPNCertificateNotAvailableError):
-            ovpn_priv_pem_key = vpnsession._vpn_pubkey_credentials.openvpn_private_key()
-        vpnsession.logout()
+        vpn_account = vpnsession.vpn_account
+        assert vpn_account.max_tier == 0
+        assert vpn_account.max_connections == 2
+        assert not vpn_account.delinquent
+        assert vpn_account.location.to_dict() == vpndata['vpn']['location']
+        vpncredentials = vpnsession.vpn_account.vpn_credentials
+        assert vpncredentials.userpass_credentials.username == vpndata['vpn']['vpninfo']['VPN']['Name']
+        assert vpncredentials.userpass_credentials.password == vpndata['vpn']['vpninfo']['VPN']['Password']
+        assert vpncredentials.pubkey_credentials.ed_255519_private_key == vpndata['vpn']['secrets']['ed25519_privatekey']
 
-    def test_vpncertificates_with_keyring(self):
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
-        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
-        ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
-        kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
-        # WARNING :
-        # - Don't give X25519 private key to the fetcher, it's expecting ED25519 private key ONLY to generate X25519 private key.
-        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.x25519_sk_bytes).fetch()
-        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
+
+class TestPubkeyCredentials:
+    def test_certificate_fingerprint_mismatch(self):
+        # Generate a new keypair. This means its fingerprint won't match the one
+        # from /vpn/v1/certificate.
         with pytest.raises(VPNCertificateFingerprintError):
-            vpnsession.__setstate__(vpndata)
-
-        vpnsession.logout()
+            VPNPubkeyCredentials(
+                api_certificate=VPNCertificate.from_dict(VPN_CERTIFICATE_API_RESPONSE),
+                # A new keypair is generated: its fingerprint won't match the one returned by /vpn/v1/certificate.
+                secrets=VPNSecrets(),
+            )
 
     def test_certificate_duration(self):
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
-        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
-        ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
-        kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
-        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch()
-        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
-        vpnsession.__setstate__(vpndata)
+        pubkey_credentials = VPNPubkeyCredentials(
+            api_certificate=VPNCertificate.from_dict(VPN_CERTIFICATE_API_RESPONSE),
+            # A new keypair is generated: its fingerprint won't match the one returned by /vpn/v1/certificate.
+            secrets=VPNSecrets.from_dict(VPN_SECRETS_DICT),
+        )
 
-        certificate=vpnsession._vpn_pubkey_credentials
-        assert(certificate.certificate_duration == 86401.0)
+        assert(pubkey_credentials.certificate_duration == 86401.0)
 
     def test_expired_certificate(self):
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        sso=ProtonSSO()
-        vpnsession=sso.get_session('tests', override_class=VPNSession)
-        vpninfo = VPNSettings.from_json(TestVpnAccountSerialize.VPN_API_RAW_DATA)
-        cert_dict = json.loads(TestVpnAccountSerialize.VPN_CLIENT_CERT_RAW_DATA)
-        ed25519_privatekey=TestVpnAccountSerialize.secrets["ed25519_privatekey"]
-        kh = KeyHandler(private_key=base64.b64decode(ed25519_privatekey))
-        vpncertcreds = VPNCertCredentialsFetcher(_raw_data=cert_dict, _private_key=kh.ed25519_sk_bytes).fetch()
-        vpndata={ 'vpn' : {'vpninfo' : vpninfo.to_dict(), 'certcreds' : vpncertcreds.to_dict()} }
-        vpnsession.__setstate__(vpndata)
-
         with pytest.raises(VPNCertificateExpiredError):
-            certificate=vpnsession._vpn_pubkey_credentials
-            pem_cert = certificate.certificate_pem()
+            pubkey_credentials = VPNPubkeyCredentials(
+                api_certificate=VPNCertificate.from_dict(VPN_CERTIFICATE_API_RESPONSE),
+                # A new keypair is generated: its fingerprint won't match the one returned by /vpn/v1/certificate.
+                secrets=VPNSecrets.from_dict(VPN_SECRETS_DICT),
+            )
+            pubkey_credentials.certificate_pem()

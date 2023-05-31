@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.1.0
+%define version 0.2.0
 %define release 1
 
 Prefix: %{_prefix}
@@ -19,9 +19,13 @@ BuildRoot: %{_tmppath}/%{unmangled_name}-%{version}-%{release}-buildroot
 
 BuildRequires: python3-pynacl
 BuildRequires: python3-proton-core
+BuildRequires: python3-proton-vpn-logger
 BuildRequires: python3-setuptools
 Requires: python3-proton-core
+Requires: python3-proton-vpn-logger
 Requires: python3-pynacl
+
+Conflicts: proton-vpn-gtk-app <= 4.0.0-0.5.a5
 
 %{?python_disable_dependency_generator}
 
@@ -45,6 +49,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Tue Jun 06 2023 Josep Llaneras <josep.llaneras@proton.ch> 0.2.0
+- Retrieve location and store it in the keyring
+
 * Wed Apr 19 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.1.0
 - Fix rules
 
