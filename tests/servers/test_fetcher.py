@@ -16,7 +16,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
-from proton.vpn.session.session import VPNSession
-from proton.vpn.session.account import VPNAccount
-from proton.vpn.session.credentials import \
-    VPNUserPassCredentials, VPNCredentials, VPNPubkeyCredentials
+import pytest
+
+from proton.vpn.session.servers.fetcher import truncate_ip_address
+
+
+def test_truncate_ip_replaces_last_ip_address_byte_with_a_zero():
+    assert truncate_ip_address("1.2.3.4") == "1.2.3.0"
+
+
+def test_truncate_ip_raises_exception_when_ip_address_is_invalid():
+    with pytest.raises(ValueError):
+        truncate_ip_address("foobar")

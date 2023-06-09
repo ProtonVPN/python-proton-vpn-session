@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.2.0
+%define version 0.3.0
 %define release 1
 
 Prefix: %{_prefix}
@@ -25,7 +25,7 @@ Requires: python3-proton-core
 Requires: python3-proton-vpn-logger
 Requires: python3-pynacl
 
-Conflicts: proton-vpn-gtk-app <= 4.0.0-0.5.a5
+Conflicts: python3-proton-vpn-api-core < 0.13.0
 
 %{?python_disable_dependency_generator}
 
@@ -49,6 +49,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Wed Jun 14 2023 Josep Llaneras <josep.llaneras@proton.ch> 0.3.0
+- Move server list/loads and client config to VPN session [VPNLINUX-524]
+
 * Tue Jun 06 2023 Josep Llaneras <josep.llaneras@proton.ch> 0.2.0
 - Retrieve location and store it in the keyring
 

@@ -16,7 +16,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
-from proton.vpn.session.session import VPNSession
-from proton.vpn.session.account import VPNAccount
-from proton.vpn.session.credentials import \
-    VPNUserPassCredentials, VPNCredentials, VPNPubkeyCredentials
+from proton.vpn import logging
+
+logger = logging.getLogger(__name__)
+
+
+async def rest_api_request(session, route, **api_request_kwargs):
+    logger.info(f"'{route}'", category="api", event="request")
+    response = await session.async_api_request(
+        route, **api_request_kwargs
+    )
+    logger.info(f"'{route}'", category="api", event="response")
+    return response

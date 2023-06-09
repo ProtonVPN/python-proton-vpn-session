@@ -22,15 +22,16 @@ from typing import Sequence, TYPE_CHECKING
 
 from proton.vpn.session.credentials import VPNCredentials, VPNUserPassCredentials, VPNPubkeyCredentials, VPNSecrets
 from proton.vpn.session.dataclasses import VPNSettings, VPNLocation, VPNCertificate
-from proton.vpn.session.exceptions import VPNCertificateError
+from proton.vpn.session.exceptions import VPNAccountDecodeError
 
 if TYPE_CHECKING:
     from proton.vpn.session.dataclasses import APIVPNSession
 
 
 class VPNAccount:
-    """ This class is responsible to encapsulate all user vpn account information, including
-        credentials (private keys, vpn user and password)
+    """
+    This class is responsible to encapsulate all user vpn account information, including
+    credentials (private keys, vpn user and password).
     """
 
     def __init__(self, vpninfo: VPNSettings, certificate: VPNCertificate, secrets: VPNSecrets, location: VPNLocation):
@@ -41,6 +42,7 @@ class VPNAccount:
 
     @staticmethod
     def from_dict(dict_data: dict) -> VPNAccount:
+        """Creates a VPNAccount instance from the specified dictionary for deserialization purposes."""
         try:
             return VPNAccount(
                 vpninfo=VPNSettings.from_dict(dict_data['vpninfo']),
@@ -49,10 +51,12 @@ class VPNAccount:
                 location=VPNLocation.from_dict(dict_data['location'])
             )
         except Exception as exc:
-            raise VPNCertificateError("Invalid VPN account") from exc
+            raise VPNAccountDecodeError("Invalid VPN account") from exc
 
     def to_dict(self) -> dict:
-        # Note that self._credentials is not persisted since it's derived from the other fields
+        """
+        Returns this object as a dictionary for serialization purposes.
+        """
         return {
             "vpninfo": self._vpninfo.to_dict(),
             "certificate": self._certificate.to_dict(),

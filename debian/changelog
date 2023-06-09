@@ -1,3 +1,9 @@
+protonvpn-session (0.3.0) unstable; urgency=medium
+
+  * Move server list/loads and client config to VPN session [VPNLINUX-524]
+
+ -- Josep Llaneras <josep.llaneras@proton.ch>  Wed, 14 Jun 2023 17:29:02 +0200
+
 protonvpn-session (0.2.0) unstable; urgency=medium
 
   * Retrieve location and store it in the keyring

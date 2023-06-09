@@ -18,9 +18,19 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 
+class VPNSessionNotLoadedError(Exception):
+    """
+    Data from the current VPN session was accessed before it was loaded.
+    """
+
+
+class VPNAccountDecodeError(ValueError):
+    """The VPN account could not be deserialized."""
+
+
 class VPNCertificateError(Exception):
     """
-    There is something wrong with the VPN certificate.
+    Base class for certificate errors.
     """
 
 
@@ -43,3 +53,17 @@ class VPNCertificateFingerprintError(VPNCertificateError):
     A new keypair should be generated and the corresponding certificate
     should be fetched from our REST API.
     """
+
+
+class ServerListDecodeError(ValueError):
+    """The server list could not be parsed."""
+
+
+class ServerNotFoundError(Exception):
+    """
+    The specified server could not be found in the server list.
+    """
+
+
+class ClientConfigDecodeError(ValueError):
+    """The client configuration could not be parsed."""

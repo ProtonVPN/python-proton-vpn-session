@@ -21,7 +21,7 @@ import pathlib
 
 import pytest
 from proton.vpn.session import VPNSession, VPNPubkeyCredentials
-from proton.vpn.session.api_fetchers import (
+from proton.vpn.session.fetcher import (
     VPNCertificate, VPNSessions, VPNSettings
 )
 from proton.vpn.session.credentials import VPNSecrets

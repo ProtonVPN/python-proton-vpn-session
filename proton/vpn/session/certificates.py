@@ -282,8 +282,7 @@ class Certificate:
                 try:
                     ext_name = ".".join(oid_array[len(self.PROTONVPN_OID_ARRAY):])
                     ext_name = ExtName(ext_name)
-                except ValueError as e:
-                    # print(f"({type(e).__name__} : {e}) Ignoring extension {ext}")
+                except ValueError:
                     continue
                 extensions[ext_name] = Extension(ext)
         return extensions

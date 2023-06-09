@@ -16,7 +16,3 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
-from proton.vpn.session.session import VPNSession
-from proton.vpn.session.account import VPNAccount
-from proton.vpn.session.credentials import \
-    VPNUserPassCredentials, VPNCredentials, VPNPubkeyCredentials
