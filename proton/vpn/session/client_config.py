@@ -33,29 +33,49 @@ if TYPE_CHECKING:
     from proton.vpn.session import VPNSession
 
 DEFAULT_CLIENT_CONFIG = {
-    "OpenVPNConfig": {
-        "DefaultPorts": {
+    "DefaultPorts": {
+        "OpenVPN": {
             "UDP": [80, 51820, 4569, 1194, 5060],
             "TCP": [443, 7770, 8443]
+        },
+        "WireGuard": {
+            "UDP": [443, 88, 1224, 51820, 500, 4500],
+            "TCP": [443],
         }
     },
     "HolesIPs": ["62.112.9.168", "104.245.144.186"],
     "ServerRefreshInterval": 10,
     "FeatureFlags": {
-        "NetShield": 0,
-        "GuestHoles": 0,
-        "ServerRefresh": 1,
-        "StreamingServicesLogos": 1,
-        "PortForwarding": 0,
-        "ModerateNAT": 1,
-        "SafeMode": 0,
-        "StartConnectOnBoot": 1,
-        "PollNotificationAPI": 1,
-        "VpnAccelerator": 1,
-        "SmartReconnect": 1,
-        "PromoCode": 0,
-        "WireGuardTls": 1
-    }
+        "NetShield": True,
+        "GuestHoles": False,
+        "ServerRefresh": True,
+        "StreamingServicesLogos": True,
+        "PortForwarding": True,
+        "ModerateNAT": True,
+        "SafeMode": False,
+        "StartConnectOnBoot": True,
+        "PollNotificationAPI": True,
+        "VpnAccelerator": True,
+        "SmartReconnect": True,
+        "PromoCode": False,
+        "WireGuardTls": True,
+        "Telemetry": True,
+        "NetShieldStats": True
+    },
+    "SmartProtocol": {
+        "OpenVPN": True,
+        "IKEv2": True,
+        "WireGuard": True,
+        "WireGuardTCP": True,
+        "WireGuardTLS": True
+    },
+    "RatingSettings": {
+    "EligiblePlans": [],
+    "SuccessConnections": 3,
+    "DaysLastReviewPassed": 100,
+    "DaysConnected": 3,
+    "DaysFromFirstConnection": 14
+  }
 }
 
 
@@ -97,6 +117,8 @@ class FeatureFlags:  # pylint: disable=R0902
     smart_reconnect: bool
     promo_code: bool
     wireguard_tls: bool
+    telemetry: bool
+    netshield_stats: bool
 
     @staticmethod
     def from_dict(feature_flags: dict) -> FeatureFlags:
@@ -114,7 +136,9 @@ class FeatureFlags:  # pylint: disable=R0902
             feature_flags["VpnAccelerator"],
             feature_flags["SmartReconnect"],
             feature_flags["PromoCode"],
-            feature_flags["WireGuardTls"]
+            feature_flags["WireGuardTls"],
+            feature_flags["Telemetry"],
+            feature_flags["NetShieldStats"]
         )
 
 
@@ -141,7 +165,7 @@ class ClientConfig:
     def from_dict(cls, apidata: dict) -> ClientConfig:
         """Creates ClientConfig object from data."""
         try:
-            openvpn_ports = apidata["OpenVPNConfig"]["DefaultPorts"]
+            openvpn_ports = apidata["DefaultPorts"]["OpenVPN"]
             holes_ips = apidata["HolesIPs"]
             server_refresh_interval = apidata["ServerRefreshInterval"]
             feature_flags = apidata["FeatureFlags"]
@@ -200,7 +224,7 @@ class ClientConfigFetcher:
     """
     Fetches and caches the client configuration from Proton's REST API.
     """
-    ROUTE = "/vpn/clientconfig"
+    ROUTE = "/vpn/v2/clientconfig"
     CACHE_PATH = Path(VPNExecutionEnvironment().path_cache) / "clientconfig.json"
 
     def __init__(self, session: "VPNSession"):

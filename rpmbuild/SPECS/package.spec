@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.3.0
+%define version 0.4.0
 %define release 1
 
 Prefix: %{_prefix}
@@ -49,6 +49,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Tue Jul 11 2023  Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.4.0
+- Update endpoint to fetch clientconfig
+
 * Wed Jun 14 2023 Josep Llaneras <josep.llaneras@proton.ch> 0.3.0
 - Move server list/loads and client config to VPN session [VPNLINUX-524]
 

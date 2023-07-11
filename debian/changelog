@@ -1,3 +1,9 @@
+protonvpn-session (0.4.0) unstable; urgency=medium
+
+  * Update endpoint to fetch clientconfig
+
+ -- Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch>  Tue, 11 Jul 2023 10:00:00 +0100
+
 protonvpn-session (0.3.0) unstable; urgency=medium
 
   * Move server list/loads and client config to VPN session [VPNLINUX-524]
