@@ -7,11 +7,11 @@
         "GroupID": "testgroup",
         "Status": 1,
         "PlanName": "free",
-        "PlanTitle": null,
+        "PlanTitle": "mock_title",
         "MaxTier": 0,
         "MaxConnect": 2,
         "Groups": [
-        "vpnfree"
+            "vpnfree"
         ],
         "NeedConnectionAllocation": false
     },

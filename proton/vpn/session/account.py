@@ -20,7 +20,8 @@ from __future__ import annotations
 
 from typing import Sequence, TYPE_CHECKING
 
-from proton.vpn.session.credentials import VPNCredentials, VPNUserPassCredentials, VPNPubkeyCredentials, VPNSecrets
+from proton.vpn.session.credentials import VPNCredentials, VPNUserPassCredentials, \
+    VPNPubkeyCredentials, VPNSecrets
 from proton.vpn.session.dataclasses import VPNSettings, VPNLocation, VPNCertificate
 from proton.vpn.session.exceptions import VPNAccountDecodeError
 
@@ -30,11 +31,14 @@ if TYPE_CHECKING:
 
 class VPNAccount:
     """
-    This class is responsible to encapsulate all user vpn account information, including
-    credentials (private keys, vpn user and password).
+    This class is responsible to encapsulate all user vpn account information,
+    including credentials (private keys, vpn user and password).
     """
 
-    def __init__(self, vpninfo: VPNSettings, certificate: VPNCertificate, secrets: VPNSecrets, location: VPNLocation):
+    def __init__(
+        self, vpninfo: VPNSettings, certificate: VPNCertificate,
+        secrets: VPNSecrets, location: VPNLocation
+    ):
         self._vpninfo = vpninfo
         self._certificate = certificate
         self._secrets = secrets
@@ -42,7 +46,8 @@ class VPNAccount:
 
     @staticmethod
     def from_dict(dict_data: dict) -> VPNAccount:
-        """Creates a VPNAccount instance from the specified dictionary for deserialization purposes."""
+        """Creates a VPNAccount instance from the specified
+            dictionary for deserialization purposes."""
         try:
             return VPNAccount(
                 vpninfo=VPNSettings.from_dict(dict_data['vpninfo']),
@@ -65,37 +70,56 @@ class VPNAccount:
         }
 
     @property
+    def plan_name(self) -> str:
+        """
+        :return: str `PlanName` value of the account from :class:`api_data.VPNInfo` in
+            Non-human readable format.
+        """
+        return self._vpninfo.VPN.PlanName
+
+    @property
+    def plan_title(self) -> str:
+        """
+        :return: str `PlanName` value of the account from :class:`api_data.VPNInfo`,
+            Human readable format, thus if you intend to display the plan
+            to the user use this one instead of :class:`VPNAccount.plan_name`.
+        """
+        return self._vpninfo.VPN.PlanTitle
+
+    @property
     def max_tier(self) -> int:
         """
-        :return: int `Maxtier` value of the acccount from :class:`api_data.VPNInfo`
+        :return: int `Maxtier` value of the account from :class:`api_data.VPNInfo`.
         """
         return self._vpninfo.VPN.MaxTier
 
     @property
     def max_connections(self) -> int:
         """
-        :return: int the `MaxConnect` value of the acccount from :class:`api_data.VPNInfo`
+        :return: int the `MaxConnect` value of the account from :class:`api_data.VPNInfo`.
         """
         return self._vpninfo.VPN.MaxConnect
 
     @property
     def delinquent(self) -> bool:
         """
-        :return: bool if the account is deliquent, based the value from :class:`api_data.VPNSettings`
+        :return: bool if the account is delinquent,
+            based the value from :class:`api_data.VPNSettings`.
         """
-        return True if self._vpninfo.Delinquent > 2 else False
+        return self._vpninfo.Delinquent > 2
 
     @property
     def active_connections(self) -> Sequence["APIVPNSession"]:
         """
-        :return: the list of active VPN session of the authenticated user on the infra
+        :return: the list of active VPN session of the authenticated user on the infra.
         """
         raise NotImplementedError
 
     @property
     def vpn_credentials(self) -> VPNCredentials:
         """ Return :class:`protonvpn.vpnconnection.interfaces.VPNCredentials` to
-            provide an interface readily usable to instanciate a :class:`protonvpn.vpnconnection.VPNConnection`
+            provide an interface readily usable to
+            instantiate a :class:`protonvpn.vpnconnection.VPNConnection`.
         """
         return VPNCredentials(
             userpass_credentials=VPNUserPassCredentials(

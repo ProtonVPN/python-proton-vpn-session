@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.4.0
+%define version 0.5.0
 %define release 1
 
 Prefix: %{_prefix}
@@ -25,7 +25,7 @@ Requires: python3-proton-core
 Requires: python3-proton-vpn-logger
 Requires: python3-pynacl
 
-Conflicts: python3-proton-vpn-api-core < 0.13.0
+Conflicts: python3-proton-vpn-api-core < 0.20.0
 
 %{?python_disable_dependency_generator}
 
@@ -49,6 +49,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Fri Sep 15 2023  Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.5.0
+- Add plan to vpn account
+
 * Tue Jul 11 2023  Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.4.0
 - Update endpoint to fetch clientconfig
 

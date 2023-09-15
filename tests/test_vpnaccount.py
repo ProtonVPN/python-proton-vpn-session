@@ -119,11 +119,11 @@ class TestVpnAccount:
     def test_vpn_session___setstate__(self):
         vpnsession = VPNSession()
         vpndata={
-            'vpn' : {
-                'vpninfo': VPN_API_RESPONSE,
-                'certificate': VPN_CERTIFICATE_API_RESPONSE,
-                'location': VPN_LOCATION_API_RESPONSE,
-                'secrets': VPN_SECRETS_DICT
+            "vpn" : {
+                "vpninfo": VPN_API_RESPONSE,
+                "certificate": VPN_CERTIFICATE_API_RESPONSE,
+                "location": VPN_LOCATION_API_RESPONSE,
+                "secrets": VPN_SECRETS_DICT
             }
         }
         vpnsession.__setstate__(vpndata)
@@ -131,12 +131,14 @@ class TestVpnAccount:
         vpn_account = vpnsession.vpn_account
         assert vpn_account.max_tier == 0
         assert vpn_account.max_connections == 2
+        assert vpn_account.plan_name == vpndata["vpn"]["vpninfo"]["VPN"]["PlanName"]
+        assert vpn_account.plan_title == vpndata["vpn"]["vpninfo"]["VPN"]["PlanTitle"]
         assert not vpn_account.delinquent
-        assert vpn_account.location.to_dict() == vpndata['vpn']['location']
+        assert vpn_account.location.to_dict() == vpndata["vpn"]["location"]
         vpncredentials = vpnsession.vpn_account.vpn_credentials
-        assert vpncredentials.userpass_credentials.username == vpndata['vpn']['vpninfo']['VPN']['Name']
-        assert vpncredentials.userpass_credentials.password == vpndata['vpn']['vpninfo']['VPN']['Password']
-        assert vpncredentials.pubkey_credentials.ed_255519_private_key == vpndata['vpn']['secrets']['ed25519_privatekey']
+        assert vpncredentials.userpass_credentials.username == vpndata["vpn"]["vpninfo"]["VPN"]["Name"]
+        assert vpncredentials.userpass_credentials.password == vpndata["vpn"]["vpninfo"]["VPN"]["Password"]
+        assert vpncredentials.pubkey_credentials.ed_255519_private_key == vpndata["vpn"]["secrets"]["ed25519_privatekey"]
 
 
 class TestPubkeyCredentials:
