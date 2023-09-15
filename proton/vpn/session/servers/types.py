@@ -26,9 +26,12 @@ from proton.vpn.session.servers.country_codes import get_country_name_by_code
 
 
 class TierEnum(IntFlag):
+    """Contains the tiers used throughout the clients.
+        The tier either block or unblock certain features and/or servers/countries.
+    """
     FREE = 0
     PLUS = 2
-    PM = 3
+    PM = 3  # "implicit-flag-alias" has been added in 2.17.5, anything lower will throw an error.
 
 
 class ServerFeatureEnum(IntFlag):
@@ -52,35 +55,51 @@ class PhysicalServer:
         self._data = data
 
     @property
-    def id(self):
+    def id(self) -> str:  # pylint: disable=invalid-name
+        """Returns the physical ID of the server."""
         return self._data.get("ID")
 
     @property
-    def entry_ip(self):
+    def entry_ip(self) -> str:
+        """Returns the IP of the entered server."""
         return self._data.get("EntryIP")
 
     @property
-    def exit_ip(self):
+    def exit_ip(self) -> str:
+        """Returns the IP of the exited server.
+            If you want to display to which IP a user is connected
+            then use this one.
+        """
         return self._data.get("ExitIP")
 
     @property
-    def domain(self):
+    def domain(self) -> str:
+        """Returns the Domain of the connected server.
+            This is usually used for TLS Authentication.
+        """
         return self._data.get("Domain")
 
     @property
-    def enabled(self):
+    def enabled(self) -> bool:
+        """Returns if the server is enabled or not"""
         return self._data.get("Status") == 1
 
     @property
-    def generation(self):
+    def generation(self) -> str:
+        """Returns the generation of the server."""
         return self._data.get("Generation")
 
     @property
-    def label(self):
+    def label(self) -> str:
+        """Returns the label value.
+            If label is passed then it ensures that the
+            `ExitIP` matches exactly to the server that we're connected.
+        """
         return self._data.get("Label")
 
     @property
-    def services_down_reason(self):
+    def services_down_reason(self) -> str:
+        """Returns the reason of why the servers are down."""
         return self._data.get("ServicesDownReason")
 
     @property
@@ -91,9 +110,9 @@ class PhysicalServer:
 
     def __repr__(self):
         if self.label != '':
-            return 'PhysicalServer<{}+b:{}>'.format(self.domain, self.label)
-        else:
-            return 'PhysicalServer<{}>'.format(self.domain)
+            return f'PhysicalServer<{self.domain}+b:{self.label}>'
+
+        return f'PhysicalServer<{self.domain}>'
 
 
 class LogicalServer:
@@ -108,6 +127,11 @@ class LogicalServer:
         self._data = data
 
     def update(self, server_load: ServerLoad):
+        """Internally updates the logical server:
+            * Load
+            * Score
+            * Status
+        """
         if self.id != server_load.id:
             raise ValueError(
                 "The id of the logical server does not match the one of "
@@ -119,20 +143,34 @@ class LogicalServer:
         self._data["Status"] = 1 if server_load.enabled else 0
 
     @property
-    def id(self):
+    def id(self) -> str:  # pylint: disable=invalid-name
+        """Returns the id of the logical server."""
         return self._data.get("ID")
 
     # Score, load and status can be modified (needed to update loads)
     @property
     def load(self) -> int:
+        """Returns the load of the servers.
+            This is generally only used for UI purposes.
+        """
         return self._data.get("Load")
 
     @property
     def score(self) -> float:
+        """Returns the score of the server.
+            The score is automatically calculated by the API and
+            is used for the logic of the "Quick Connect".
+            The lower the number is the better is for establishing a connection.
+        """
         return self._data.get("Score")
 
     @property
     def enabled(self) -> bool:
+        """Returns if the server is enabled or not.
+            Usually the API should return 0 if all physical servers
+            are not enabled, but just to be sure we also evaluate all
+            physical servers.
+        """
         return self._data.get("Status") == 1 and any(
             x.enabled for x in self.physical_servers
         )
@@ -140,17 +178,17 @@ class LogicalServer:
     # Every other propriety is readonly
     @property
     def name(self) -> str:
-        """ Name of the logical, example : CH#10 """
+        """Name of the logical, ie: CH#10"""
         return self._data.get("Name")
 
     @property
     def entry_country(self) -> str:
-        """ 2 letter country code entry """
+        """2 letter country code entry, ie: CH"""
         return self._data.get("EntryCountry")
 
     @property
     def exit_country(self) -> str:
-        """ 2 letter country code exit """
+        """2 letter country code exit, ie: CH"""
         return self._data.get("ExitCountry")
 
     @property
@@ -160,13 +198,15 @@ class LogicalServer:
 
     @property
     def host_country(self) -> str:
-        """ 2 letter country code host """
+        """2 letter country code host: CH.
+            If there is a host country then it means that this server location
+            is emulated, see Smart Routing definition for further clarification.
+        """
         return self._data.get("HostCountry")
 
     @property
     def features(self) -> List[ServerFeatureEnum]:
-        """ List of features supported by this Logical
-        """
+        """ List of features supported by this Logical."""
         return self.__unpack_bitmap_features(self._data.get("Features", 0))
 
     def __unpack_bitmap_features(self, server_value):
@@ -179,27 +219,35 @@ class LogicalServer:
         return server_features
 
     @property
-    def region(self):
+    def region(self) -> str:
+        """Returns the region of the server."""
         return self._data.get("Region")
 
     @property
     def city(self) -> str:
+        """Returns the city of the server."""
         return self._data.get("City")
 
     @property
     def tier(self) -> int:
+        """Returns the minimum required tier to be able to establish a connection.
+            Server-side check is always done, so this is mainly for UI purposes.
+        """
         return TierEnum(int(self._data.get("Tier")))
 
     @property
     def latitude(self) -> float:
+        """Returns servers latitude."""
         return self._data.get("Location", {}).get("Lat")
 
     @property
     def longitude(self) -> float:
+        """Returns servers longitude."""
         return self._data.get("Location", {}).get("Long")
 
     @property
-    def data(self):
+    def data(self) -> dict:
+        """Returns a copy of the data pertaining this server."""
         return self._data.copy()
 
     @property
@@ -222,32 +270,41 @@ class LogicalServer:
         return self._data
 
     def __repr__(self):
-        return 'LogicalServer<{}>'.format(self._data.get("Name", "??"))
+        return f'LogicalServer<{self._data.get("Name", "??")}>'
 
 
 class ServerLoad:
-    """
-    Contains data about logical servers to be updated frequently.
+    """Contains data about logical servers to be updated frequently.
     """
 
     def __init__(self, data: Dict):
         self._data = data
 
     @property
-    def id(self):
+    def id(self) -> str:  # pylint: disable=invalid-name
+        """Returns the id of the logical server."""
         return self._data.get("ID")
 
-    # Score, load and status can be modified (needed to update loads)
     @property
     def load(self) -> int:
+        """Returns the load of the servers.
+            This is generally only used for UI purposes.
+        """
         return self._data.get("Load")
 
     @property
     def score(self) -> float:
+        """Returns the score of the server.
+            The score is automatically calculated by the API and
+            is used for the logic of the "Quick Connect".
+            The lower the number is the better is for establishing a connection.
+        """
         return self._data.get("Score")
 
     @property
     def enabled(self) -> bool:
+        """Returns if the server is enabled or not.
+        """
         return self._data.get("Status") == 1
 
     def __str__(self):

@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import random
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 import time
 
 from proton.utils.environment import VPNExecutionEnvironment
@@ -70,12 +70,12 @@ DEFAULT_CLIENT_CONFIG = {
         "WireGuardTLS": True
     },
     "RatingSettings": {
-    "EligiblePlans": [],
-    "SuccessConnections": 3,
-    "DaysLastReviewPassed": 100,
-    "DaysConnected": 3,
-    "DaysFromFirstConnection": 14
-  }
+        "EligiblePlans": [],
+        "SuccessConnections": 3,
+        "DaysLastReviewPassed": 100,
+        "DaysConnected": 3,
+        "DaysFromFirstConnection": 14
+    }
 }
 
 
@@ -211,11 +211,11 @@ class ClientConfig:
         return 1 + cls.REFRESH_RANDOMNESS * (2 * random.random() - 1)
 
     @classmethod
-    def get_refresh_interval_in_seconds(cls):
+    def get_refresh_interval_in_seconds(cls):  # pylint: disable=missing-function-docstring
         return cls.REFRESH_INTERVAL * cls._generate_random_component()
 
     @classmethod
-    def get_expiration_time(cls, start_time: int = None):
+    def get_expiration_time(cls, start_time: int = None):  # noqa: E501 pylint: disable=missing-function-docstring
         start_time = start_time if start_time is not None else time.time()
         return start_time + cls.get_refresh_interval_in_seconds()
 

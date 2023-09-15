@@ -161,10 +161,14 @@ class VPNSession(Session):
         """
         self._requests_lock()
         try:
-            secrets = VPNSecrets(
-                # pylint: disable=line-too-long  # noqa: E501
-                ed25519_privatekey=self._vpn_account.vpn_credentials.pubkey_credentials.ed_255519_private_key
-            ) if self._vpn_account else VPNSecrets()
+            secrets = (
+                VPNSecrets(
+                    ed25519_privatekey=self._vpn_account.vpn_credentials
+                    .pubkey_credentials.ed_255519_private_key
+                )
+                if self._vpn_account
+                else VPNSecrets()
+            )
 
             vpninfo, certificate, location, client_config = await asyncio.gather(
                 self._fetcher.fetch_vpn_info(),

@@ -21,7 +21,7 @@ from proton.vpn import logging
 logger = logging.getLogger(__name__)
 
 
-async def rest_api_request(session, route, **api_request_kwargs):
+async def rest_api_request(session, route, **api_request_kwargs):  # noqa: E501 pylint: disable=missing-function-docstring
     logger.info(f"'{route}'", category="api", event="request")
     response = await session.async_api_request(
         route, **api_request_kwargs

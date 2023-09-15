@@ -27,25 +27,25 @@ from typing import List
 
 
 @dataclass
-class LoginResult:
+class LoginResult:  # pylint: disable=missing-class-docstring
     success: bool
     authenticated: bool
     twofa_required: bool
 
 
-class Serializable:
-    def to_json(self) -> str:
+class Serializable:  # pylint: disable=missing-class-docstring
+    def to_json(self) -> str:  # pylint: disable=missing-function-docstring
         return json.dumps(asdict(self))
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict:  # pylint: disable=missing-function-docstring
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, dict_data: dict) -> 'Serializable':
+    def from_dict(cls, dict_data: dict) -> 'Serializable':  # noqa: E501 pylint: disable=missing-function-docstring
         return cls._deserialize(dict_data)
 
     @classmethod
-    def from_json(cls, data: str) -> 'Serializable':
+    def from_json(cls, data: str) -> 'Serializable':  # pylint: disable=missing-function-docstring
         dict_data = json.loads(data)
         return cls._deserialize(dict_data)
 
@@ -55,7 +55,7 @@ class Serializable:
 
 
 @dataclass
-class VPNInfo(Serializable):
+class VPNInfo(Serializable):  # pylint: disable=too-many-instance-attributes
     """ Same object structure as the one coming from the API"""
     ExpirationTime: int
     Name: str
@@ -72,12 +72,13 @@ class VPNInfo(Serializable):
     """ List of groups that this account belongs to """
     NeedConnectionAllocation: bool
 
+    @staticmethod
     def _deserialize(dict_data: dict) -> VPNInfo:
         return VPNInfo(**dict_data)
 
 
 @dataclass
-class VPNSettings(Serializable):
+class VPNSettings(Serializable):  # pylint: disable=too-many-instance-attributes
     """ Same object structure as the one coming from the API"""
     VPN: VPNInfo
     Services: int
@@ -99,7 +100,7 @@ class VPNSettings(Serializable):
 
 
 @dataclass
-class VPNCertificate(Serializable):
+class VPNCertificate(Serializable):  # pylint: disable=too-many-instance-attributes
     """ Same object structure coming from the API """
     SerialNumber: str
     ClientKeyFingerprint: str
@@ -121,7 +122,7 @@ class VPNCertificate(Serializable):
 
 
 @dataclass
-class APIVPNSession(Serializable):
+class APIVPNSession(Serializable):  # pylint: disable=missing-class-docstring
     SessionID: str
     ExitIP: str
     Protocol: str
