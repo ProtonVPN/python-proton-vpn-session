@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.5.0
+%define version 0.6.0
 %define release 1
 
 Prefix: %{_prefix}
@@ -49,6 +49,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Thu Sep 21 2023  Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.0
+- Fix issue where both (access and refresh) tokens  were not stored in keyring after being updated
+
 * Fri Sep 15 2023  Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.5.0
 - Add plan to vpn account
 

@@ -61,7 +61,6 @@ class ServerListFetcher:
             self._session,
             self.ROUTE_LOGICALS,
             additional_headers=self._build_netzone_header(),
-            no_condition_check=True
         )
 
         response[PersistenceKeys.USER_TIER.value] = self._session.vpn_account.max_tier
@@ -88,7 +87,6 @@ class ServerListFetcher:
             self._session,
             self.ROUTE_LOADS,
             additional_headers=self._build_netzone_header(),
-            no_condition_check=True
         )
 
         server_loads = [ServerLoad(data) for data in response["LogicalServers"]]

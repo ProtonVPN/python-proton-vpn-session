@@ -51,7 +51,7 @@ class VPNSessionFetcher:
     async def fetch_vpn_info(self) -> VPNSettings:
         """Fetches client VPN information."""
         return VPNSettings.from_dict(
-            await rest_api_request(self._session, "/vpn", no_condition_check=True)
+            await rest_api_request(self._session, "/vpn")
         )
 
     async def fetch_certificate(
@@ -69,7 +69,7 @@ class VPNSessionFetcher:
 
         return VPNCertificate.from_dict(
             await rest_api_request(
-                self._session, "/vpn/v1/certificate", jsondata=json_req, no_condition_check=True
+                self._session, "/vpn/v1/certificate", jsondata=json_req
             )
         )
 
@@ -78,13 +78,13 @@ class VPNSessionFetcher:
         Fetches information about active VPN sessions.
         """
         return VPNSessions.from_dict(
-            await rest_api_request(self._session, "/vpn/sessions", no_condition_check=True)
+            await rest_api_request(self._session, "/vpn/sessions")
         )
 
     async def fetch_location(self) -> VPNLocation:
         """Fetches information about the physical location the VPN client is connected from."""
         return VPNLocation.from_dict(
-            await rest_api_request(self._session, "/vpn/location", no_condition_check=True)
+            await rest_api_request(self._session, "/vpn/location")
         )
 
     def load_server_list_from_cache(self) -> ServerList:

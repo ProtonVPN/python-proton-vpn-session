@@ -248,7 +248,6 @@ class ClientConfigFetcher:
         response = await rest_api_request(
             self._session,
             self.ROUTE,
-            no_condition_check=True
         )
         response["ExpirationTime"] = ClientConfig.get_expiration_time()
         self._cache_file.save(response)

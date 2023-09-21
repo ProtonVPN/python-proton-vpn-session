@@ -88,6 +88,7 @@ class VPNSession(Session):
                 self._client_config = self._fetcher.load_client_config_from_cache()
         except ValueError:
             logger.exception("Error deserializing VPN session.")
+
         super().__setstate__(data)
 
     def __getstate__(self):
@@ -159,7 +160,39 @@ class VPNSession(Session):
         """
         Fetches the required session data from Proton's REST APIs.
         """
-        self._requests_lock()
+
+        # We have to use `no_condition_check=True` with `_requests_lock`
+        # because otherwise all requests after that will be blocked
+        # until the lock created by `_requests_lock` is released.
+        # Since the previous lock is only released at the end of the try/except/finally the
+        # requests will never be executed, thus blocking and never releasing the lock.
+
+        # Each request in `proton.session.api.Session` already creates and holds the lock by itself,
+        # but the problem here is that we want to add additional data to be stored to the keyring.
+        # Thus we need to resort to some manual
+        # triggering of `_requests_lock` and `_requests_unlock`.
+        # The former caches keyring data to memory while the latter does three different things:
+        #   1. It checks if the new data is different from the old one
+        #   2. If they are different then it proceeds to delete old one from keyring
+        #   3. Add new data to the keyring
+        # So if we want to add additional data to the keyring, as in VPN relevant data,
+        # we must ensure that we always call `_requests_unlock()` after any requests
+        # because this is currently the only way to store data that is attached
+        # to a specific account.
+
+        # So the consequence for passing `no_condition_check=True` is that the keyring data will
+        # not get cached to memory, for later to be compared (as previously described).
+        # This means that later when the comparison will be made, the "old" data will just be empty,
+        # forcing it to always be replaced by the new data to keyring. Thus this solution is just a
+        # temporary hack until a better approach is found.
+
+        # For further clarification on how these methods see the following, in the specified order:
+        #     `proton.session.api.Session._requests_lock`
+        #     `proton.sso.sso.ProtonSSO._acquire_session_lock`
+        #     `proton.session.api.Session._requests_unlock`
+        #     `proton.sso.sso.ProtonSSO._release_session_lock`
+
+        self._requests_lock(no_condition_check=True)
         try:
             secrets = (
                 VPNSecrets(
