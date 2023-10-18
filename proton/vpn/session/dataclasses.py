@@ -18,9 +18,9 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, fields, asdict
-import json
 from typing import List
+import json
+from dataclasses import dataclass, asdict
 
 
 # pylint: disable=invalid-name
@@ -67,14 +67,26 @@ class VPNInfo(Serializable):  # pylint: disable=too-many-instance-attributes
     MaxTier: int
     """ Maximum tier value that this account can vpn connect to """
     MaxConnect: int
-    """ Maximum number of simultaneaous session on the infrastructure"""
+    """ Maximum number of simultaneous session on the infrastructure"""
     Groups: List[str]
     """ List of groups that this account belongs to """
     NeedConnectionAllocation: bool
 
     @staticmethod
     def _deserialize(dict_data: dict) -> VPNInfo:
-        return VPNInfo(**dict_data)
+        return VPNInfo(
+            ExpirationTime=dict_data["ExpirationTime"],
+            Name=dict_data["Name"],
+            Password=dict_data["Password"],
+            GroupID=dict_data["GroupID"],
+            Status=dict_data["Status"],
+            PlanName=dict_data["PlanName"],
+            PlanTitle=dict_data["PlanTitle"],
+            MaxTier=dict_data["MaxTier"],
+            MaxConnect=dict_data["MaxConnect"],
+            Groups=dict_data["Groups"],
+            NeedConnectionAllocation=dict_data["NeedConnectionAllocation"]
+        )
 
 
 @dataclass
@@ -92,10 +104,15 @@ class VPNSettings(Serializable):  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def _deserialize(dict_data: dict) -> VPNSettings:
-        __vpn_settings_fields = [v.name for v in fields(VPNSettings) if v.name != 'VPN']
         return VPNSettings(
-            VPNInfo.from_dict(dict_data['VPN']),
-            **{name: dict_data[name] for name in __vpn_settings_fields}
+            VPN=VPNInfo.from_dict(dict_data["VPN"]),
+            Services=dict_data["Services"],
+            Subscribed=dict_data["Subscribed"],
+            Delinquent=dict_data["Delinquent"],
+            HasPaymentMethod=dict_data["HasPaymentMethod"],
+            Credit=dict_data["Credit"],
+            Currency=dict_data["Currency"],
+            Warnings=dict_data["Warnings"]
         )
 
 
@@ -117,8 +134,18 @@ class VPNCertificate(Serializable):  # pylint: disable=too-many-instance-attribu
 
     @staticmethod
     def _deserialize(dict_data: dict) -> VPNCertificate:
-        __fields = [v.name for v in fields(VPNCertificate)]
-        return VPNCertificate(**{name: dict_data[name] for name in __fields})
+        return VPNCertificate(
+            SerialNumber=dict_data["SerialNumber"],
+            ClientKeyFingerprint=dict_data["ClientKeyFingerprint"],
+            ClientKey=dict_data["ClientKey"],
+            Certificate=dict_data["Certificate"],
+            ExpirationTime=dict_data["ExpirationTime"],
+            RefreshTime=dict_data["RefreshTime"],
+            Mode=dict_data["Mode"],
+            DeviceName=dict_data["DeviceName"],
+            ServerPublicKeyMode=dict_data["ServerPublicKeyMode"],
+            ServerPublicKey=dict_data["ServerPublicKey"]
+        )
 
 
 @dataclass
@@ -129,8 +156,11 @@ class APIVPNSession(Serializable):  # pylint: disable=missing-class-docstring
 
     @staticmethod
     def _deserialize(dict_data: dict) -> APIVPNSession:
-        __fields = [v.name for v in fields(APIVPNSession)]
-        return APIVPNSession(**{name: dict_data[name] for name in __fields})
+        return APIVPNSession(
+            SessionID=dict_data["SessionID"],
+            ExitIP=dict_data["ExitIP"],
+            Protocol=dict_data["Protocol"]
+        )
 
 
 @dataclass

@@ -4,9 +4,9 @@ from setuptools import setup, find_namespace_packages
 
 setup(
     name="proton-vpn-session",
-    version="0.6.0",
+    version="0.6.1",
     description="ProtonVPN Session wrapper",
-    author="Proton Technologies",
+    author="Proton AG",
     author_email="contact@protonmail.com",
     url="https://github.com/ProtonMail/python-protonvpn-session",
     install_requires=["proton-core", "proton-vpn-logger", "cryptography", "PyNaCl"],
