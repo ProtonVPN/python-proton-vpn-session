@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 class ServerListFetcher:
     """Fetches the server list either from disk or from the REST API."""
 
-    ROUTE_LOGICALS = "/vpn/logicals"
+    ROUTE_LOGICALS = "/vpn/logicals?SecureCoreFilter=all"
     ROUTE_LOADS = "/vpn/loads"
     CACHE_PATH = Path(VPNExecutionEnvironment().path_cache) / "serverlist.json"
 

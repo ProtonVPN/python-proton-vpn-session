@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.6.1
+%define version 0.6.2
 %define release 1
 
 Prefix: %{_prefix}
@@ -49,6 +49,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Wed Oct 25 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.2
+- When fetching servers ask API to provide the entire list of secure core servers
+
 * Wed Oct 18 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.1
 - Ingore unexpected properties coming from API
 
