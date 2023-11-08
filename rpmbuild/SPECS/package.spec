@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.6.2
+%define version 0.6.3
 %define release 1
 
 Prefix: %{_prefix}
@@ -25,7 +25,7 @@ Requires: python3-proton-core
 Requires: python3-proton-vpn-logger
 Requires: python3-pynacl
 
-Conflicts: python3-proton-vpn-api-core < 0.20.0
+Conflicts: python3-proton-vpn-api-core < 0.20.2
 
 %{?python_disable_dependency_generator}
 
@@ -49,6 +49,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Wed Nov 08 2023 Josep Llaneras <josep.llaneras@proton.ch> 0.6.3
+- Stop making use of sync_wrapper due to thread-safety issues
+
 * Wed Oct 25 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.2
 - When fetching servers ask API to provide the entire list of secure core servers
 

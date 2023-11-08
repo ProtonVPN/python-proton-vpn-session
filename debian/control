@@ -10,5 +10,5 @@ Package: python3-proton-vpn-session
 Architecture: all
 Depends: ${python3:Depends}, ${misc:Depends}, python3-proton-core, python3-proton-vpn-logger, python3-nacl
 Recommends: python3-tabulate
-Breaks: python3-proton-vpn-api-core (<< 0.20.0)
+Breaks: python3-proton-vpn-api-core (<< 0.20.2)
 Description: Python3 ProtonVPN Session

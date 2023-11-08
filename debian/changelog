@@ -1,3 +1,9 @@
+protonvpn-session (0.6.3) unstable; urgency=medium
+
+  * Stop making use of sync_wrapper due to thread-safety issues
+
+ -- Josep Llaneras <josep.llaneras@proton.ch>  Wed, 08 Nov 2023 12:57:14 +0100
+
 protonvpn-session (0.6.2) unstable; urgency=medium
 
   * When fetching servers ask API to provide the entire list of secure core servers

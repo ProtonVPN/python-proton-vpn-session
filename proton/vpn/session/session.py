@@ -20,7 +20,6 @@ import asyncio
 from typing import Optional
 
 from proton.session import Session
-from proton.session.api import sync_wrapper
 
 from proton.vpn import logging
 from proton.vpn.session.account import VPNAccount
@@ -102,7 +101,7 @@ class VPNSession(Session):
 
         return state
 
-    async def async_login(self, username: str, password: str) -> LoginResult:
+    async def login(self, username: str, password: str) -> LoginResult:
         """
         Logs the user in.
         :returns: the login result, indicating whether it was successful
@@ -117,12 +116,10 @@ class VPNSession(Session):
         if self.needs_twofa:
             return LoginResult(success=False, authenticated=True, twofa_required=True)
 
-        await self.async_fetch_session_data()
+        await self.fetch_session_data()
         return LoginResult(success=True, authenticated=True, twofa_required=False)
 
-    login = sync_wrapper(async_login)
-
-    async def async_provide_2fa(self, code: str) -> LoginResult:  # pylint: disable=arguments-differ
+    async def provide_2fa(self, code: str) -> LoginResult:  # pylint: disable=arguments-differ
         """
         Submits the 2FA code.
         :returns: whether the 2FA was successful or not.
@@ -131,23 +128,19 @@ class VPNSession(Session):
         if not valid_code:
             return LoginResult(success=False, authenticated=True, twofa_required=True)
 
-        await self.async_fetch_session_data()
+        await self.fetch_session_data()
         return LoginResult(success=True, authenticated=True, twofa_required=False)
 
-    provide_2fa = sync_wrapper(async_provide_2fa)
-
-    async def async_logout(self, no_condition_check=False, additional_headers=None) -> bool:
+    async def logout(self, no_condition_check=False, additional_headers=None) -> bool:
         """
         Log out and reset session data.
         """
-        result = await super().async_logout()
+        result = await super().async_logout(no_condition_check, additional_headers)
         self._vpn_account = None
         self._server_list = None
         self._client_config = None
         self._fetcher.clear_cache()
         return result
-
-    logout = sync_wrapper(async_logout)
 
     @property
     def logged_in(self) -> bool:
@@ -156,7 +149,7 @@ class VPNSession(Session):
         """
         return self.authenticated and not self.needs_twofa
 
-    async def async_fetch_session_data(self):
+    async def fetch_session_data(self):
         """
         Fetches the required session data from Proton's REST APIs.
         """
@@ -223,8 +216,6 @@ class VPNSession(Session):
             # serialization of the session to the keyring.
             self._requests_unlock()
 
-    fetch_session_data = sync_wrapper(async_fetch_session_data)
-
     @property
     def vpn_account(self) -> VPNAccount:
         """
@@ -233,21 +224,19 @@ class VPNSession(Session):
         """
         return self._vpn_account
 
-    async def async_fetch_server_list(self) -> ServerList:
+    async def fetch_server_list(self) -> ServerList:
         """
         Fetches the server list from the REST API.
         """
         self._server_list = await self._fetcher.fetch_server_list()
         return self._server_list
 
-    fetch_server_list = sync_wrapper(async_fetch_server_list)
-
     @property
     def server_list(self) -> ServerList:
         """The current server list."""
         return self._server_list
 
-    async def async_update_server_loads(self) -> ServerList:
+    async def update_server_loads(self) -> ServerList:
         """
         Fetches the server loads from the REST API and updates the current
         server list with them.
@@ -255,14 +244,10 @@ class VPNSession(Session):
         self._server_list = await self._fetcher.update_server_loads()
         return self._server_list
 
-    update_server_loads = sync_wrapper(async_update_server_loads)
-
-    async def async_fetch_client_config(self) -> ClientConfig:
+    async def fetch_client_config(self) -> ClientConfig:
         """Fetches the client configuration from the REST api."""
         self._client_config = await self._fetcher.fetch_client_config()
         return self._client_config
-
-    fetch_client_config = sync_wrapper(async_fetch_client_config)
 
     @property
     def client_config(self) -> ClientConfig:
