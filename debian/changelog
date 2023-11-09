@@ -1,6 +1,7 @@
 protonvpn-session (0.6.3) unstable; urgency=medium
 
   * Stop making use of sync_wrapper due to thread-safety issues
+  * Move bug report submission from proton-vpn-api-core to proton-vpn-session
 
  -- Josep Llaneras <josep.llaneras@proton.ch>  Wed, 08 Nov 2023 12:57:14 +0100
 

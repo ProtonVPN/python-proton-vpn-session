@@ -20,3 +20,6 @@ from proton.vpn.session.session import VPNSession
 from proton.vpn.session.account import VPNAccount
 from proton.vpn.session.credentials import \
     VPNUserPassCredentials, VPNCredentials, VPNPubkeyCredentials
+from proton.vpn.session.dataclasses import BugReportForm, LoginResult
+from proton.vpn.session.client_config import ClientConfig
+from proton.vpn.session.servers.logicals import ServerList

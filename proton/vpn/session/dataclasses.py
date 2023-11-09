@@ -18,9 +18,12 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
 
+import typing
 from typing import List
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
+
+import distro
 
 
 # pylint: disable=invalid-name
@@ -199,3 +202,21 @@ class VPNLocation(Serializable):
             Country=dict_data["Country"],
             ISP=dict_data["ISP"]
         )
+
+
+VPN_CLIENT_TYPE = "2"  # 1: email;  2: VPN
+
+
+@dataclass
+class BugReportForm:  # pylint: disable=too-many-instance-attributes
+    """Bug report form data to be submitted to customer support."""
+    username: str
+    email: str
+    title: str
+    description: str
+    client_version: str
+    client: str
+    attachments: List[typing.IO] = field(default_factory=list)
+    os: str = distro.id()  # pylint: disable=invalid-name
+    os_version: str = distro.version()
+    client_type: str = VPN_CLIENT_TYPE

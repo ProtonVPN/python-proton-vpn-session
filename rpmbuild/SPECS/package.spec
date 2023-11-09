@@ -17,13 +17,16 @@ Source0: %{unmangled_name}-%{version}.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{unmangled_name}-%{version}-%{release}-buildroot
 
-BuildRequires: python3-pynacl
+BuildRequires: python3-setuptools
 BuildRequires: python3-proton-core
 BuildRequires: python3-proton-vpn-logger
-BuildRequires: python3-setuptools
+BuildRequires: python3-pynacl
+BuildRequires: python3-distro
+
 Requires: python3-proton-core
 Requires: python3-proton-vpn-logger
 Requires: python3-pynacl
+Requires: python3-distro
 
 Conflicts: python3-proton-vpn-api-core < 0.20.2
 
@@ -51,6 +54,7 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %changelog
 * Wed Nov 08 2023 Josep Llaneras <josep.llaneras@proton.ch> 0.6.3
 - Stop making use of sync_wrapper due to thread-safety issues
+- Move bug report submission from proton-vpn-api-core to proton-vpn-session
 
 * Wed Oct 25 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.2
 - When fetching servers ask API to provide the entire list of secure core servers

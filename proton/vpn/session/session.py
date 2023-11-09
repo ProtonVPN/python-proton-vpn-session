@@ -17,16 +17,17 @@ You should have received a copy of the GNU General Public License
 along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
 import asyncio
+from os.path import basename
 from typing import Optional
 
-from proton.session import Session
+from proton.session import Session, FormData, FormField
 
 from proton.vpn import logging
 from proton.vpn.session.account import VPNAccount
 from proton.vpn.session.fetcher import VPNSessionFetcher
 from proton.vpn.session.client_config import ClientConfig
 from proton.vpn.session.credentials import VPNSecrets
-from proton.vpn.session.dataclasses import LoginResult
+from proton.vpn.session.dataclasses import LoginResult, BugReportForm
 from proton.vpn.session.servers.logicals import ServerList
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,8 @@ class VPNSession(Session):
             api_pem_certificate = pubkey_credentials.certificate_pem
 
     """
+
+    BUG_REPORT_ENDPOINT = "/core/v4/reports/bug"
 
     def __init__(
             self, *args,
@@ -253,3 +256,25 @@ class VPNSession(Session):
     def client_config(self) -> ClientConfig:
         """The current client configuration."""
         return self._client_config
+
+    async def submit_bug_report(self, bug_report: BugReportForm):
+        """Submits a bug report to customer support."""
+        data = FormData()
+        data.add(FormField(name="OS", value=bug_report.os))
+        data.add(FormField(name="OSVersion", value=bug_report.os_version))
+        data.add(FormField(name="Client", value=bug_report.client))
+        data.add(FormField(name="ClientVersion", value=bug_report.client_version))
+        data.add(FormField(name="ClientType", value=bug_report.client_type))
+        data.add(FormField(name="Title", value=bug_report.title))
+        data.add(FormField(name="Description", value=bug_report.description))
+        data.add(FormField(name="Username", value=bug_report.username))
+        data.add(FormField(name="Email", value=bug_report.email))
+        for i, attachment in enumerate(bug_report.attachments):
+            data.add(FormField(
+                name=f"Attachment-{i}", value=attachment,
+                filename=basename(attachment.name)
+            ))
+
+        return await self.async_api_request(
+            endpoint=VPNSession.BUG_REPORT_ENDPOINT, data=data
+        )

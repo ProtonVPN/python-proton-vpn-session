@@ -9,9 +9,9 @@ setup(
     author="Proton AG",
     author_email="contact@protonmail.com",
     url="https://github.com/ProtonMail/python-protonvpn-session",
-    install_requires=["proton-core", "proton-vpn-logger", "cryptography", "PyNaCl"],
+    install_requires=["proton-core", "proton-vpn-logger", "cryptography", "PyNaCl", "distro"],
     extras_require={
-        "development": ["pytest", "pytest-coverage", "flake8", "pylint"]
+        "development": ["pytest", "pytest-coverage", "pytest-asyncio", "flake8", "pylint"]
     },
     packages=find_namespace_packages(include=['proton.*']),
     include_package_data=True,
