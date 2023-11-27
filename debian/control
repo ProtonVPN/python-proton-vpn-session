@@ -9,5 +9,6 @@ X-Python3-Version: >= 3.8
 Package: python3-proton-vpn-session
 Architecture: all
 Depends: ${python3:Depends}, ${misc:Depends}, python3-proton-core, python3-proton-vpn-logger, python3-nacl, python3-distro
-Breaks: python3-proton-vpn-api-core (<< 0.20.2)
+Recommends: python3-tabulate
+Breaks: python3-proton-vpn-api-core (<< 0.20.2), proton-vpn-gtk-app (<< 4.1.3)
 Description: Python3 ProtonVPN Session

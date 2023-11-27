@@ -1,3 +1,8 @@
+protonvpn-session (0.6.4) unstable; urgency=medium
+  * Add property to logical server
+
+ -- Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch>  Mon, 27 Nov 2023 10:00:00 +0100
+
 protonvpn-session (0.6.3) unstable; urgency=medium
 
   * Stop making use of sync_wrapper due to thread-safety issues

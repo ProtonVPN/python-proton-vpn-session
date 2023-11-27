@@ -18,6 +18,7 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
 from proton.vpn.session.exceptions import ServerNotFoundError
 from proton.vpn.session.servers.types import PhysicalServer, LogicalServer, ServerLoad
+from proton.vpn.session.servers.country_codes import get_country_name_by_code
 
 import pytest
 
@@ -105,7 +106,9 @@ class TestLogicalServer:
         assert server.enabled == L_STATUS
         assert server.name == NAME
         assert server.entry_country == ENTRYCOUNTRY
+        assert server.entry_country_name == get_country_name_by_code(server.entry_country)
         assert server.exit_country == EXITCOUNTRY
+        assert server.exit_country_name == get_country_name_by_code(server.exit_country)
         assert server.host_country == HOSTCOUNTRY
         assert server.features == []
         assert server.region == REGION

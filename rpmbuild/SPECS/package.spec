@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.6.3
+%define version 0.6.4
 %define release 1
 
 Prefix: %{_prefix}
@@ -29,6 +29,7 @@ Requires: python3-pynacl
 Requires: python3-distro
 
 Conflicts: python3-proton-vpn-api-core < 0.20.2
+Conflicts: proton-vpn-gtk-app < 4.1.3
 
 %{?python_disable_dependency_generator}
 
@@ -52,6 +53,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Mon Nov 27 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.4
+- Add property to logical server
+
 * Wed Nov 08 2023 Josep Llaneras <josep.llaneras@proton.ch> 0.6.3
 - Stop making use of sync_wrapper due to thread-safety issues
 - Move bug report submission from proton-vpn-api-core to proton-vpn-session

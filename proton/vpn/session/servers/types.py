@@ -115,7 +115,7 @@ class PhysicalServer:
         return f'PhysicalServer<{self.domain}>'
 
 
-class LogicalServer:
+class LogicalServer:  # pylint: disable=too-many-public-methods
     """
     Abstraction of a VPN server.
 
@@ -185,6 +185,11 @@ class LogicalServer:
     def entry_country(self) -> str:
         """2 letter country code entry, ie: CH"""
         return self._data.get("EntryCountry")
+
+    @property
+    def entry_country_name(self) -> str:
+        """Full name of the entry country (e.g. Switzerland)."""
+        return get_country_name_by_code(self.entry_country)
 
     @property
     def exit_country(self) -> str:
