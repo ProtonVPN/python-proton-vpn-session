@@ -18,6 +18,7 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 """
 from __future__ import annotations
 
+import os as sys_os
 import typing
 from typing import List
 import json
@@ -207,6 +208,23 @@ class VPNLocation(Serializable):
 VPN_CLIENT_TYPE = "2"  # 1: email;  2: VPN
 
 
+def get_desktop_environment():
+    """Returns the current desktop environment"""
+    return sys_os.environ.get('XDG_CURRENT_DESKTOP', "Unknown DE")
+
+
+def get_distro_variant():
+    """Returns the current distro environment"""
+    distro_variant = distro.os_release_attr('variant')
+    return f"; {distro_variant}" if distro_variant else ""
+
+
+def generate_os_string():
+    """Returns a string which contains information such as the distro, desktop environment
+    and distro variant if it exists"""
+    return f"{distro.id()} ({get_desktop_environment()}{get_distro_variant()})"
+
+
 @dataclass
 class BugReportForm:  # pylint: disable=too-many-instance-attributes
     """Bug report form data to be submitted to customer support."""
@@ -217,6 +235,6 @@ class BugReportForm:  # pylint: disable=too-many-instance-attributes
     client_version: str
     client: str
     attachments: List[typing.IO] = field(default_factory=list)
-    os: str = distro.id()  # pylint: disable=invalid-name
+    os: str = generate_os_string()  # pylint: disable=invalid-name
     os_version: str = distro.version()
     client_type: str = VPN_CLIENT_TYPE
