@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.6.5
+%define version 0.6.6
 %define release 1
 
 Prefix: %{_prefix}
@@ -53,7 +53,10 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
-* Wed Jan 24 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.5
+* Fri Mar 1 2024 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.6
+- Add WireGuard ports
+
+* Wed Jan 24 2024 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.5
 - Add desktop environment and distro variant values when submitting a bug report
 
 * Mon Nov 27 2023 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.4

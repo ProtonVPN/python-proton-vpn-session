@@ -65,12 +65,12 @@ def apidata():
             "WireGuardTLS": True
         },
         "RatingSettings": {
-        "EligiblePlans": [],
-        "SuccessConnections": 3,
-        "DaysLastReviewPassed": 100,
-        "DaysConnected": 3,
-        "DaysFromFirstConnection": 14
-    },
+            "EligiblePlans": [],
+            "SuccessConnections": 3,
+            "DaysLastReviewPassed": 100,
+            "DaysConnected": 3,
+            "DaysFromFirstConnection": 14
+        },
         "ExpirationTime": EXPIRATION_TIME
     }
 
@@ -80,6 +80,8 @@ def test_from_dict(apidata):
 
     assert client_config.openvpn_ports.udp == apidata["DefaultPorts"]["OpenVPN"]["UDP"]
     assert client_config.openvpn_ports.tcp == apidata["DefaultPorts"]["OpenVPN"]["TCP"]
+    assert client_config.wireguard_ports.udp == apidata["DefaultPorts"]["WireGuard"]["UDP"]
+    assert client_config.wireguard_ports.tcp == apidata["DefaultPorts"]["WireGuard"]["TCP"]
     assert client_config.holes_ips == apidata["HolesIPs"]
     assert client_config.server_refresh_interval == apidata["ServerRefreshInterval"]
     assert client_config.feature_flags.netshield == apidata["FeatureFlags"]["NetShield"]

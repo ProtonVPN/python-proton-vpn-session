@@ -80,20 +80,20 @@ DEFAULT_CLIENT_CONFIG = {
 
 
 @dataclass
-class OpenVPNPorts:
-    """Dataclass for openvpn ports.
+class ProtocolPorts:
+    """Dataclass for ports.
     These ports are mainly used for establishing VPN connections.
     """
     udp: List
     tcp: List
 
     @staticmethod
-    def from_dict(openvpn_ports: dict) -> OpenVPNPorts:
-        """Creates OpenVPNPorts object from data."""
+    def from_dict(ports: dict) -> ProtocolPorts:
+        """Creates ProtocolPorts object from data."""
         # The lists are copied to avoid side effects if the dict is modified.
-        return OpenVPNPorts(
-            openvpn_ports["UDP"].copy(),
-            openvpn_ports["TCP"].copy()
+        return ProtocolPorts(
+            ports["UDP"].copy(),
+            ports["TCP"].copy()
         )
 
 
@@ -151,11 +151,12 @@ class ClientConfig:
     REFRESH_RANDOMNESS = 0.22  # +/- 22%
 
     def __init__(
-        self, openvpn_ports, holes_ips,
+        self, openvpn_ports, wireguard_ports, holes_ips,
         server_refresh_interval, feature_flags,
         expiration_time
     ):  # pylint: disable=R0913
         self.openvpn_ports = openvpn_ports
+        self.wireguard_ports = wireguard_ports
         self.holes_ips = holes_ips
         self.server_refresh_interval = server_refresh_interval
         self.feature_flags = feature_flags
@@ -166,6 +167,7 @@ class ClientConfig:
         """Creates ClientConfig object from data."""
         try:
             openvpn_ports = apidata["DefaultPorts"]["OpenVPN"]
+            wireguard_ports = apidata["DefaultPorts"]["WireGuard"]
             holes_ips = apidata["HolesIPs"]
             server_refresh_interval = apidata["ServerRefreshInterval"]
             feature_flags = apidata["FeatureFlags"]
@@ -173,7 +175,9 @@ class ClientConfig:
 
             return ClientConfig(
                 # No need to copy openvpn_ports, OpenVPNPorts takes care of it.
-                OpenVPNPorts.from_dict(openvpn_ports),
+                ProtocolPorts.from_dict(openvpn_ports),
+                # No need to copy wireguard_ports, WireGuardPorts takes care of it.
+                ProtocolPorts.from_dict(wireguard_ports),
                 # We copy the holes_ips list to avoid side effects if it's modified.
                 holes_ips.copy(),
                 server_refresh_interval,
