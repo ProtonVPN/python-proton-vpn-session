@@ -1,3 +1,9 @@
+protonvpn-session (0.6.7) unstable; urgency=medium
+
+  * Include ISP and Country in bug report submissions.
+
+ -- Luke Titley <luke.titley@proton.ch> Mon, Mar 25 2024 17:55:59 +0100
+
 protonvpn-session (0.6.6) unstable; urgency=medium
 
   * Add WireGuard ports

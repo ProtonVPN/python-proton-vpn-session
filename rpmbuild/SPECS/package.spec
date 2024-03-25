@@ -1,5 +1,5 @@
 %define unmangled_name proton-vpn-session
-%define version 0.6.6
+%define version 0.6.7
 %define release 1
 
 Prefix: %{_prefix}
@@ -53,6 +53,9 @@ python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUI
 %defattr(-,root,root)
 
 %changelog
+* Mon Mar 25 2024 Luke Titley <luke.titley@proton.ch> 0.6.7
+- Add ISP and Country to bug reports.
+
 * Fri Mar 1 2024 Alexandru Cheltuitor <alexandru.cheltuitor@proton.ch> 0.6.6
 - Add WireGuard ports
 

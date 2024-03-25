@@ -269,6 +269,12 @@ class VPNSession(Session):
         data.add(FormField(name="Description", value=bug_report.description))
         data.add(FormField(name="Username", value=bug_report.username))
         data.add(FormField(name="Email", value=bug_report.email))
+
+        if self._vpn_account:
+            location = self._vpn_account.location
+            data.add(FormField(name="ISP", value=location.ISP))
+            data.add(FormField(name="Country", value=location.Country))
+
         for i, attachment in enumerate(bug_report.attachments):
             data.add(FormField(
                 name=f"Attachment-{i}", value=attachment,

@@ -19,16 +19,27 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 import tempfile
 from os.path import basename
 from unittest.mock import patch
+from unittest.mock import Mock
 
 import pytest
 
 from proton.vpn.session import VPNSession
 from proton.vpn.session.dataclasses import BugReportForm
 
+MOCK_ISP = "Proton ISP"
+MOCK_COUNTRY = "Middle Earth"
+
+def create_mock_vpn_account():
+    vpn_account = Mock
+    vpn_account.location = Mock()
+    vpn_account.location.ISP = MOCK_ISP
+    vpn_account.location.Country = MOCK_COUNTRY
+    return vpn_account
 
 @pytest.mark.asyncio
 async def test_submit_report():
     s = VPNSession()
+    s._vpn_account = create_mock_vpn_account()
     attachments = []
 
     with tempfile.NamedTemporaryFile(mode="rb") as attachment1, tempfile.NamedTemporaryFile(mode="rb") as attachment2:
@@ -55,7 +66,7 @@ async def test_submit_report():
 
         submitted_data = api_request_kwargs["data"]
 
-        assert len(submitted_data.fields) == 11
+        assert len(submitted_data.fields) == 13
 
         form_field = submitted_data.fields[0]
         assert form_field.name == "OS"
@@ -94,11 +105,19 @@ async def test_submit_report():
         assert form_field.value == bug_report.email
 
         form_field = submitted_data.fields[9]
+        assert form_field.name == "ISP"
+        assert form_field.value == MOCK_ISP
+
+        form_field = submitted_data.fields[10]
+        assert form_field.name == "Country"
+        assert form_field.value == MOCK_COUNTRY
+
+        form_field = submitted_data.fields[11]
         assert form_field.name == "Attachment-0"
         assert form_field.value == bug_report.attachments[0]
         assert form_field.filename == basename(form_field.value.name)
 
-        form_field = submitted_data.fields[10]
+        form_field = submitted_data.fields[12]
         assert form_field.name == "Attachment-1"
         assert form_field.value == bug_report.attachments[1]
         assert form_field.filename == basename(form_field.value.name)
